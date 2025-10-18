@@ -26,9 +26,23 @@ INSERT INTO categories (id, name, slug, created_at) VALUES
 (2, 'Design', 'design', CURRENT_TIMESTAMP);
 
 -- 6️⃣ Job Postings
-INSERT INTO job_postings (id, company_id, category_id, title, description, requirements, salary_min, salary_max, location, job_type, experience_level, number_of_positions, status, deadline, created_at) VALUES
-(1, 1, 1, 'Java Backend Developer', 'Develop and maintain backend services', 'Java, Spring Boot, SQL', 1000, 2000, 'Hanoi', 'full-time', 'mid', 2, 'published', '2025-12-31', CURRENT_TIMESTAMP),
-(2, 2, 2, 'UI/UX Designer', 'Design user interfaces for mobile apps', 'Figma, Adobe XD', 800, 1500, 'HCMC', 'full-time', 'entry', 1, 'published', '2025-12-31', CURRENT_TIMESTAMP);
+-- 6️⃣ Job Postings (đã thêm required_skills)
+INSERT INTO job_postings (
+  id, company_id, category_id, title, description, requirements, salary_min, salary_max, 
+  location, job_type, experience_level, number_of_positions, status, deadline, required_skills, created_at
+) VALUES
+(1, 1, 1, 'Java Backend Developer', 
+ 'Develop and maintain backend services', 
+ 'Experience with Java, Spring Boot, and SQL', 
+ 1000, 2000, 'Hanoi', 'full-time', 'mid', 2, 'published', '2025-12-31', 
+ 'Java, Spring Boot, SQL', CURRENT_TIMESTAMP),
+
+(2, 2, 2, 'UI/UX Designer', 
+ 'Design user interfaces for mobile apps', 
+ 'Experience with Figma and Adobe XD', 
+ 800, 1500, 'HCMC', 'full-time', 'entry', 1, 'published', '2025-12-31', 
+ 'Figma, Adobe XD, UI Design', CURRENT_TIMESTAMP);
+
 
 -- 7️⃣ Candidate Profiles
 INSERT INTO candidate_profiles (id, user_id, headline, summary, total_experience, profile_visibility, is_open_to_work, created_at) VALUES

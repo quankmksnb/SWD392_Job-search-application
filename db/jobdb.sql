@@ -73,6 +73,7 @@ CREATE TABLE `job_postings` (
   `number_of_positions` integer DEFAULT 1,
   `status` varchar(255) DEFAULT 'published',
   `deadline` date,
+  `required_skills` text COMMENT 'Comma-separated list or JSON array of skill names',
   `created_at` timestamp,
   `updated_at` timestamp
 );
