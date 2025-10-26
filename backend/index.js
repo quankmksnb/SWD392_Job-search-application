@@ -1,12 +1,9 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-<<<<<<< Updated upstream
-=======
 import pool from "./config/db.js";
 import { getJobList, createJob } from "./controllers/jobController.js";
 import router from "./routes/routes.js"
->>>>>>> Stashed changes
 
 dotenv.config();
 const app = express();
@@ -18,8 +15,6 @@ app.get("/", (req, res) => {
   res.send("Backend running successfully 🚀");
 });
 
-<<<<<<< Updated upstream
-=======
 // test database connection
 const checkDBConnection = async () => {
   try {
@@ -47,15 +42,9 @@ app.get("/test-users", async (req, res) => {
 
 
 
-
-// app.get("/job-list", getJobList)
-// app.post("/create-job", createJob)
-
 app.use('/job', router);
 
 
-
->>>>>>> Stashed changes
 const PORT = process.env.PORT || 9999;
 app.listen(PORT, () => {
   console.log(`📝 Available Job API Routes:`);
