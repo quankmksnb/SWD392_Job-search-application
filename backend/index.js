@@ -40,10 +40,7 @@ app.get("/test-users", async (req, res) => {
 });
 
 
-
-
 app.use('/job', router);
-
 
 const PORT = process.env.PORT || 9999;
 app.listen(PORT, () => {
