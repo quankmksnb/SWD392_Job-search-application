@@ -3,12 +3,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import pool from "./config/db.js";
-
-// Import routes
-import authRoutes from "./src/routes/authRoutes.js";
-import userRoutes from "./src/routes/userRoutes.js";
-import roleRoutes from "./src/routes/roleRoutes.js";
-import permissionRoutes from "./src/routes/permissionRoutes.js";
+import { getJobList, createJob } from "./controllers/jobController.js";
+import router from "./routes/routes.js"
 
 dotenv.config();
 
@@ -26,19 +22,30 @@ app.use("/api/users", userRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/permissions", permissionRoutes);
 
-// Default route
-app.get("/", (req, res) => res.json({ ok: true }));
-
-// Start server
-async function start() {
+// test quẻy
+app.get("/test-users", async (req, res) => {
   try {
-    await pool.query("SELECT 1");
-    console.log("✅ MySQL connected");
-    app.listen(PORT, () => console.log(`🚀 Server listening on ${PORT}`));
-  } catch (err) {
-    console.error("❌ DB connection failed:", err);
-    process.exit(1);
+    const [rows] = await pool.query("SELECT * FROM users LIMIT 10");
+    console.log(rows);
+    res.json(rows);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ message: "Query failed" });
   }
-}
+});
 
-start();
+
+app.use('/job', router);
+
+const PORT = process.env.PORT || 9999;
+app.listen(PORT, () => {
+  console.log(`📝 Available Job API Routes:`);
+  console.log(`   GET  http://localhost:${PORT}/job/job-list - Get all jobs`);
+  console.log(`   POST http://localhost:${PORT}/job/create-job - Create new job`);
+  console.log(`   GET http://localhost:${PORT}/job/category-name - Cate`);
+  console.log(`   GET http://localhost:${PORT}/job/company-name - Cate`);
+  console.log(`   PUT  http://localhost:${PORT}/job/update-job/:id`);
+
+  // Test thêm
+  console.log("✅ Server started successfully!");
+});
