@@ -1,43 +1,22 @@
-import express from "express";
-import cors from "cors";
+// index.js
 import dotenv from "dotenv";
-import pool from "./config/db.js";
-
 dotenv.config();
-const app = express();
-app.use(cors());
-app.use(express.json());
 
-// Test route
-app.get("/", (req, res) => {
-  res.send("Backend running successfully 🚀");
-});
+import app from "./src/app.js";
+import pool from "./config/db.js"; // ✅ import default, không có {}
 
-// test database connection
-const checkDBConnection = async () => {
+const PORT = process.env.PORT || 5000;
+
+async function start() {
   try {
-    const connection = await pool.getConnection();
-    console.log("MySQL connected!");
-    connection.release();
-  } catch (error) {
-    console.error("MySQL connection failed:", error.message);
+    // ✅ kiểm tra kết nối (không dùng .promise())
+    await pool.query("SELECT 1");
+    console.log("✅ MySQL connected");
+    app.listen(PORT, () => console.log(`🚀 Server listening on ${PORT}`));
+  } catch (err) {
+    console.error("❌ DB connection failed:", err);
+    process.exit(1);
   }
-};
-checkDBConnection();
+}
 
-// test quẻy
-app.get("/test-users", async (req, res) => {
-  try {
-    const [rows] = await pool.query("SELECT * FROM users LIMIT 10");
-    console.log(rows);
-    res.json(rows);
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ message: "Query failed" });
-  }
-});
-
-
-
-const PORT = process.env.PORT || 9999;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+start();

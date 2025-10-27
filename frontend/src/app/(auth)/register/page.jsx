@@ -1,7 +1,49 @@
+'use client'
 import FloatingInput from "@/components/ui/Floating/FloatingInput";
 import Image from "next/image";
+import { register } from "@/services/AuthService";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function HomeTest() {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isRecruiter, setIsRecruiter] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const router = useRouter();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      await register({
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        password: password,
+        isRecruiter: isRecruiter, // Thêm trường isRecruiter
+      });
+      setSuccess(
+        "Registration successful! Please check your email for verification link."
+      );
+      setTimeout(() => {
+        // Assuming user will click the link in email; no immediate redirect here
+      }, 3000);
+    } catch (err) {
+      setError(err.message || "Registration failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex">
       <div className="flex-1 relative">
@@ -26,33 +68,76 @@ export default function HomeTest() {
             <button className="flex-1 py-2 px-4 text-gray-600">Business</button>
           </div>
 
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {success && <p className="text-green-500 text-sm">{success}</p>}
+
             <div className="grid grid-cols-2 gap-4">
               <FloatingInput
                 label="First name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
                 className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
               />
               <FloatingInput
                 label="Last name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
                 className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <FloatingInput
               label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
             />
 
             <div className="relative">
               <FloatingInput
                 label="Password"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 pr-10"
               />
               <button
                 type="button"
-                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
               >
-                👁️
+                {showPassword ? "👁️‍🗨️" : "👁️"}
+              </button>
+            </div>
+
+            {/* Nút toggle Recruiter */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-100 p-2 rounded-lg">
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">I'm a Recruiter</p>
+                  <p className="text-xs text-gray-500">Register as a hiring professional</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsRecruiter(!isRecruiter)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  isRecruiter ? 'bg-blue-600' : 'bg-gray-300'
+                }`}
+                aria-label="Toggle recruiter status"
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    isRecruiter ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
               </button>
             </div>
 
@@ -70,9 +155,10 @@ export default function HomeTest() {
 
             <button
               type="submit"
-              className="w-full py-3 bg-gray-400 text-white rounded-lg font-medium"
+              disabled={isLoading}
+              className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              Create personal account
+              {isLoading ? "Creating..." : "Create personal account"}
             </button>
 
             <div className="text-center text-gray-600 my-4">
