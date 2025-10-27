@@ -3,21 +3,21 @@ import { useRouter, useParams } from "next/navigation"
 import { useState, useEffect } from 'react'
 import axios from 'axios';
 import '../../select.scss'
+import { Descriptions } from "antd";
 const UpdateJob = () => {
     const data = {
-        company_id: "", category_id: "", title: "", description: "", requirements: "", salary_min: "",
-        salary_max: "", location: "", job_type: "Full-time", experience_level: "Mid-level", number_of_positions: 1, status: "active",
-        deadline: "2024-12-31", required_skills: ""
+        company_id: "", category_id: "", title: "", description: "", requirements: "", salary_min: "", salary_max: "", location: "",
+        job_type: "Full-time", experience_level: "Mid-level", number_of_positions: 1, status: "active", deadline: "2024-12-31", required_skills: ""
     }
     const router = useRouter()
     const params = useParams();
     const job_id = params.id
-
     const [dataJob, setDataJob] = useState(data)
     const [jobPosts, setJobPosts] = useState([])
     const [cateName, setCateName] = useState([])
     const [compName, setCompName] = useState([])
     const [selectSkill, setSelectSkill] = useState([])
+    const [selectStatus, setSelectStatus] = useState('active')
 
     useEffect(() => {
         const fetchAllData = async () => {
@@ -26,7 +26,6 @@ const UpdateJob = () => {
                     const response = await axios.get('http://localhost:9999/job/job-list');
                     setJobPosts(response.data.data || []);
                 };
-
                 const fetchJobDetail = async () => {
                     if (job_id) {
                         const response = await axios.get('http://localhost:9999/job/job-list');
@@ -49,7 +48,7 @@ const UpdateJob = () => {
                                 deadline: jobData.deadline || "",
                                 required_skills: jobData.required_skills || ""
                             });
-
+                            setSelectStatus(jobData.status || "active");
                             if (jobData.required_skills) {
                                 const skillArray = jobData.required_skills.split(', ').map(skill => skill.trim());
                                 setSelectSkill(skillArray);
@@ -67,19 +66,11 @@ const UpdateJob = () => {
                     const response = await axios.get('http://localhost:9999/job/company-name');
                     setCompName(response.data.data || []);
                 };
-
-                await Promise.all([
-                    fetchJobList(),
-                    fetchJobDetail(),
-                    fechCategoryName(),
-                    fechCompanyName()
-                ]);
-
+                await Promise.all([fetchJobList(), fetchJobDetail(), fechCategoryName(), fechCompanyName()]);
             } catch (err) {
                 console.error("Error fetching data:", err);
             }
         };
-
         fetchAllData();
     }, [job_id]);
 
@@ -96,14 +87,6 @@ const UpdateJob = () => {
     const typeJob = [...new Set(
         (jobPosts || []).map(job => job.job_type).filter(Boolean)
     )];
-
-    const formatDate = (dateTime) => {
-        const date = new Date(dateTime)
-        const day = String(date.getDay()).padStart(2, '0')
-        const month = String(date.getMonth() + 1).padStart(2, '0')
-        const years = String(date.getFullYear())
-        return `${day}-${month}-${years}`
-    }
 
     const handleChange = (e) => {
         const { name, value, type } = e.target
@@ -131,15 +114,11 @@ const UpdateJob = () => {
             required_skills: selectedOptions.join(', ')
         }))
     };
-
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!dataJob.company_id || !dataJob.category_id) {
-            alert('Vui lòng chọn Company, Category');
+    const handleSubmit = async () => {
+        if (!dataJob.company_id || !dataJob.category_id || !dataJob.title || !dataJob.description || !dataJob.requirements || !dataJob.location) {
+            alert('Please enter complete information');
             return;
         }
-
         try {
             let mysqlDeadline = '2024-12-31';
             if (dataJob.deadline) {
@@ -149,7 +128,6 @@ const UpdateJob = () => {
                     mysqlDeadline = dataJob.deadline;
                 }
             }
-
             const submitData = {
                 company_id: Number(dataJob.company_id),
                 category_id: Number(dataJob.category_id),
@@ -166,9 +144,7 @@ const UpdateJob = () => {
                 deadline: mysqlDeadline,
                 required_skills: dataJob.required_skills || ''
             };
-
             const response = await axios.put(`http://localhost:9999/job/update-job/${job_id}`, submitData);
-
             if (response.data.success) {
                 alert('Job updated successfully!');
                 router.push("/job/job-list");
@@ -179,22 +155,22 @@ const UpdateJob = () => {
         }
     }
     return (
-        <div className="p-10">
-            <div className="flex items-center justify-between p-4 mb-4">
+        <div className="p-10 bg-[#CDE5F1]">
+            <div className="flex items-center justify-between mb-6 p-4 bg-[white] rounded-lg shadow-lg">
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">UPDATE RECRUITMENT POST</h2>
-                <button className="flex items-center gap-2 px-3 py-1 text-blue-700 hover:text-blue-600 transition"
+                <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg border border-gray-300"
                     onClick={() => router.push("/job/job-list")}>Back
                 </button>
             </div>
-            <form onSubmit={handleSubmit}>
+            <div>
                 <div className="grid grid-cols-12 gap-4">
-                    <div className="bg-white p-6  shadow-md col-span-8 ">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+                    <div className="bg-white p-6 rounded-lg shadow-md col-span-8 ">
+                        <h2 className="text-2xl font-bold text-blue-500 mb-6 text-center">
                             Basic information
                         </h2>
                         <div>
                             <div className=" mb-2">
-                                <label className="block text-gray-700 font-medium m-2">Title</label>
+                                <label className="block text-gray-700 font-medium m-2">Title<strong className="text-red-500"> *</strong></label>
                                 <input type="text" placeholder="Enter Title" name="title"
                                     value={dataJob.title} onChange={handleChange}
                                     className="w-full border border-gray-300 rounded-lg px-3 py-2 " />
@@ -208,7 +184,6 @@ const UpdateJob = () => {
                                         {compName.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                     </select>
                                 </div>
-
                                 <div >
                                     <label className="block text-gray-700 font-medium m-2">Category</label>
                                     <select name="category_id" value={dataJob.category_id} onChange={handleChange}
@@ -217,7 +192,6 @@ const UpdateJob = () => {
                                         {cateName.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                     </select>
                                 </div>
-
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div >
@@ -238,13 +212,13 @@ const UpdateJob = () => {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-gray-700 font-medium m-2">Description</label>
+                                <label className="block text-gray-700 font-medium m-2">Description<strong className="text-red-500"> *</strong></label>
                                 <textarea name="description" value={dataJob.description}
                                     className="w-full border border-gray-300 rounded-lg px-3 py-6"
                                     placeholder="Enter Description" onChange={handleChange} />
                             </div>
                             <div>
-                                <label className="block text-gray-700 font-medium m-2">Requirement</label>
+                                <label className="block text-gray-700 font-medium m-2">Requirement<strong className="text-red-500"> *</strong></label>
                                 <textarea name="requirements" value={dataJob.requirements}
                                     className="w-full border border-gray-300 rounded-lg px-3 py-6"
                                     placeholder="Enter Requirement" onChange={handleChange} />
@@ -252,8 +226,8 @@ const UpdateJob = () => {
                         </div>
                     </div>
 
-                    <div className="bg-white p-6 shadow-md col-span-4">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Salary & Location</h2>
+                    <div className="bg-white p-6 shadow-md col-span-4 rounded-lg">
+                        <h2 className="text-2xl font-bold text-blue-500 mb-6 text-center">Salary & Location</h2>
                         <div >
                             <label className="block text-gray-700 font-medium m-2">Skill</label>
                             <select value={selectSkill} multiple name="required-skill" onChange={handleSkillChange}
@@ -277,16 +251,41 @@ const UpdateJob = () => {
                             </div>
                         </div>
                         <div className="mt-2">
-                            <label className="block text-gray-700 font-medium mb-2">Location</label>
+                            <label className="block text-gray-700 font-medium mb-2">Location<strong className="text-red-500"> *</strong></label>
                             <input type="text" name="location" value={dataJob.location}
                                 placeholder="Enter location" onChange={handleChange}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2" />
                         </div>
                         <div className="mt-2">
                             <label className="block text-gray-700 font-medium mb-2">Deadline</label>
-                            <input
-                                type="date" name="deadline" value={dataJob.deadline ? dataJob.deadline.split('T')[0] : ''}
+                            <input type="date" name="deadline" value={dataJob.deadline ? dataJob.deadline.split('T')[0] : ''}
                                 onChange={handleChange} className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+                        </div>
+                        <div className="mt-2">
+                            <label className="block text-gray-700 font-medium mb-2">Status</label>
+                            <div className="flex">
+                                <div className="flex w-full">
+                                    <input type="radio" name="status" value="active"
+                                        checked={dataJob.status === 'active'}
+                                        onChange={(e) => {
+                                            setDataJob(prev => ({ ...prev, status: e.target.value }));
+                                            setSelectStatus(e.target.value);
+                                        }} className="w-4 h-4 mt-1 mr-4"
+                                    />
+                                    <label className="block text-gray-700 font-medium mb-2">Active</label>
+                                </div>
+                                <div className="flex w-full">
+                                    <input type="radio" name="status" value="published"
+                                        checked={dataJob.status === 'published'}
+                                        onChange={(e) => {
+                                            setDataJob(prev => ({ ...prev, status: e.target.value }));
+                                            setSelectStatus(e.target.value);
+                                        }}
+                                        className="w-4 h-4 mt-1 mr-4"
+                                    />
+                                    <label className="block text-gray-700 font-medium mb-2">Published</label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -295,12 +294,11 @@ const UpdateJob = () => {
                         type="button" onClick={() => router.push('/job/job-list')}
                         className="mr-10 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition"
                     > Cancel </button>
-                    <button
-                        type="submit"
+                    <button onClick={handleSubmit}
                         className="ms-10 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
                     > Save </button>
                 </div>
-            </form>
+            </div>
 
         </div>
     )
