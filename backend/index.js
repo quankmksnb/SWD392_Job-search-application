@@ -1,11 +1,35 @@
+// index.js
+import express from "express";
+import cors from "cors";
 import dotenv from "dotenv";
-dotenv.config();
-
-import app from "./src/app.js";
 import pool from "./config/db.js";
 
-const PORT = process.env.PORT || 5000;
+// Import routes
+import authRoutes from "./src/routes/authRoutes.js";
+import userRoutes from "./src/routes/userRoutes.js";
+import roleRoutes from "./src/routes/roleRoutes.js";
+import permissionRoutes from "./src/routes/permissionRoutes.js";
 
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 9999;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/roles", roleRoutes);
+app.use("/api/permissions", permissionRoutes);
+
+// Default route
+app.get("/", (req, res) => res.json({ ok: true }));
+
+// Start server
 async function start() {
   try {
     await pool.query("SELECT 1");
