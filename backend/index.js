@@ -3,8 +3,11 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import pool from "./config/db.js";
-import { getJobList, createJob } from "./controllers/jobController.js";
-import router from "./routes/routes.js"
+import router from "./routes/routes.js";
+import authRoutes from "./src/routes/authRoutes.js";
+import userRoutes from "./src/routes/userRoutes.js";
+import roleRoutes from "./src/routes/roleRoutes.js";
+import permissionRoutes from "./src/routes/permissionRoutes.js";
 
 dotenv.config();
 
@@ -21,8 +24,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/permissions", permissionRoutes);
+app.use("/job", router);
 
-// test quẻy
+// test 
 app.get("/test-users", async (req, res) => {
   try {
     const [rows] = await pool.query("SELECT * FROM users LIMIT 10");
@@ -34,18 +38,7 @@ app.get("/test-users", async (req, res) => {
   }
 });
 
-
-app.use('/job', router);
-
-const PORT = process.env.PORT || 9999;
 app.listen(PORT, () => {
-  console.log(`📝 Available Job API Routes:`);
-  console.log(`   GET  http://localhost:${PORT}/job/job-list - Get all jobs`);
-  console.log(`   POST http://localhost:${PORT}/job/create-job - Create new job`);
-  console.log(`   GET http://localhost:${PORT}/job/category-name - Cate`);
-  console.log(`   GET http://localhost:${PORT}/job/company-name - Cate`);
-  console.log(`   PUT  http://localhost:${PORT}/job/update-job/:id`);
-
   // Test thêm
   console.log("✅ Server started successfully!");
 });
