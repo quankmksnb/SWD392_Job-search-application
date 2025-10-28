@@ -1,5 +1,5 @@
 import readline from 'readline';
-import pool from "../config/db.js";
+import pool from '../../config/db.js';
 
 const getAllJob = async () => {
     const [results] = await pool.execute(`SELECT job.*, cate.name as category_name, com.name as company_name FROM job_postings job  

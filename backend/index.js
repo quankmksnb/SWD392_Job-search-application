@@ -3,11 +3,11 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import pool from "./config/db.js";
-import router from "./routes/routes.js";
 import authRoutes from "./src/routes/authRoutes.js";
 import userRoutes from "./src/routes/userRoutes.js";
 import roleRoutes from "./src/routes/roleRoutes.js";
 import permissionRoutes from "./src/routes/permissionRoutes.js";
+import router from "./src/routes/routes.js";
 
 dotenv.config();
 
@@ -26,7 +26,7 @@ app.use("/api/roles", roleRoutes);
 app.use("/api/permissions", permissionRoutes);
 app.use("/job", router);
 
-// test 
+// test
 app.get("/test-users", async (req, res) => {
   try {
     const [rows] = await pool.query("SELECT * FROM users LIMIT 10");
