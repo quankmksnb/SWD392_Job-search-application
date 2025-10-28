@@ -8,6 +8,7 @@ import userRoutes from "./src/routes/userRoutes.js";
 import roleRoutes from "./src/routes/roleRoutes.js";
 import permissionRoutes from "./src/routes/permissionRoutes.js";
 import jobRouter from "./src/routes/jobRoutes.js";
+import interviewRoutes from "./src/routes/interviewRoutes.js";
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/permissions", permissionRoutes);
 app.use("/job", jobRouter);
+app.use("/api/interviews", interviewRoutes);
 
 // test
 app.get("/test-users", async (req, res) => {
