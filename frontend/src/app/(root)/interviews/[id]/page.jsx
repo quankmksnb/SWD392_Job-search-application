@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Descriptions, Card, message } from "antd";
 import { useParams } from "next/navigation";
 import dayjs from "dayjs";
-import { InterviewService } from "@/services/InterviewService";
+import InterviewService from "@/services/InterviewService";
 
 export default function InterviewDetailPage() {
   const { id } = useParams();
