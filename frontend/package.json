@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@ant-design/compatible": "^5.1.4",
     "antd": "^5.27.3",
     "axios": "^1.12.2",
     "next": "15.5.2",

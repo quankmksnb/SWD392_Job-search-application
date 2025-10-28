@@ -3,7 +3,6 @@ import {
   DollarOutlined,
   EnvironmentOutlined,
 } from "@ant-design/icons";
-import "@ant-design/compatible";
 import { Button, Card, Col, Row, Space, Tag, Typography } from "antd";
 import Image from "next/image";
 import job2 from "../../../public/images/BE.png";

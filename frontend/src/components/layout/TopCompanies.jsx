@@ -1,5 +1,4 @@
 import { BankOutlined } from "@ant-design/icons";
-import "@ant-design/compatible";
 import { Card, Col, Row, Typography } from "antd";
 import Image from "next/image";
 import cty1 from "../../../public/images/cty1.jpg";

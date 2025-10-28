@@ -1,5 +1,4 @@
 "use client";
-import "@ant-design/compatible";
 import React, { useEffect, useState } from "react";
 import Button from "@/components/ui/Button";
 import Image from "next/image";

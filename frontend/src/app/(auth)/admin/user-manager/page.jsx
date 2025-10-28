@@ -1,5 +1,4 @@
 "use client";
-import '@ant-design/compatible';
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
