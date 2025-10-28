@@ -1,5 +1,5 @@
 // src/services/CategoryService.js
-import api from "./index";
+import api from "./api";
 
 // Lấy danh sách categories với phân trang
 export const listCategories = (params) => api.get("/categories", { params });

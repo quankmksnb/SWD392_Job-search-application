@@ -1,4 +1,4 @@
-import api from "./index";
+import api from "./api";
 
 // Đăng ký
 export const register = (data) => api.post("/auth/register", data);

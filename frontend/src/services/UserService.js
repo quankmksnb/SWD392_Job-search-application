@@ -1,5 +1,5 @@
 // src/services/userService.js
-import api from "./index";
+import api from "./api";
 
 // Lấy thông tin user hiện tại
 export const getProfile = () => api.get("/users/me");

@@ -1,4 +1,4 @@
-import api from "./index";
+import api from "./api";
 
 // 🧾 Lấy danh sách tất cả quyền
 export const listPermissions = () => api.get("/permissions");

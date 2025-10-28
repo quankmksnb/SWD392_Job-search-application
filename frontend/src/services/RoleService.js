@@ -1,4 +1,4 @@
-import api from "./index";
+import api from "./api";
 
 // Thêm vai trò mới
 export const createRole = (data) => api.post("/roles", data);
