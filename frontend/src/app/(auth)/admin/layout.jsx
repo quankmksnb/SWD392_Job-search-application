@@ -56,12 +56,19 @@ export default function AdminLayout({ children }) {
       label: "Quản lý tài khoản",
       onClick: () => router.push("/admin/user-manager"),
     },
+    {
+      key: "category-manager",
+      icon: <SettingOutlined />,
+      label: "Quản lý Categories",
+      onClick: () => router.push("/admin/category-manager"),
+    },
   ];
 
   // Map pathname thành key menu
   const pathToKey = {
     "/admin/role-manager": "role-manager",
     "/admin/user-manager": "user-manager",
+    "/admin/category-manager": "category-manager",
   };
 
   return (

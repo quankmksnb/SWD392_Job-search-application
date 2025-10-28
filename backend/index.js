@@ -8,6 +8,7 @@ import authRoutes from "./src/routes/authRoutes.js";
 import userRoutes from "./src/routes/userRoutes.js";
 import roleRoutes from "./src/routes/roleRoutes.js";
 import permissionRoutes from "./src/routes/permissionRoutes.js";
+import categoryRoutes from "./src/routes/categoryRoutes.js";
 
 dotenv.config();
 
@@ -24,21 +25,10 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/permissions", permissionRoutes);
+app.use("/api/categories", categoryRoutes);
 app.use("/job", router);
 
-// test 
-app.get("/test-users", async (req, res) => {
-  try {
-    const [rows] = await pool.query("SELECT * FROM users LIMIT 10");
-    console.log(rows);
-    res.json(rows);
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ message: "Query failed" });
-  }
-});
-
 app.listen(PORT, () => {
-  // Test thêm
   console.log("✅ Server started successfully!");
+  console.log(`🚀 Backend API running on: http://localhost:${PORT}`);
 });
