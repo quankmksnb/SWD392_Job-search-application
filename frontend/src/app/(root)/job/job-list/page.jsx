@@ -1,8 +1,8 @@
 "use client"
 import { useRouter, useParams } from "next/navigation"
+import FilterCard from '../../../../components/ui/FilterCard';
 import { useState, useEffect } from 'react'
 import axios from 'axios';
-import '../select.scss'
 const ViewJob = () => {
     const router = useRouter()
     const { id } = useParams();
@@ -23,7 +23,7 @@ const ViewJob = () => {
 
     const formatDate = (dateTime) => {
         if (!dateTime) return '';
-        return dateTime.split('T')[0]; // Lấy phần YYYY-MM-DD từ ISO string
+        return dateTime.split('T')[0];
     }
 
     const uniCategory = ["All Category", ... new Set(jobPosts.map(job => job.category_name))]
@@ -51,32 +51,13 @@ const ViewJob = () => {
             </div>
             <div className="flex">
                 <div className="w-1/6 mt-4">
-                    <div className="bg-white rounded-lg shadow-lg">
-                        <h6 className="font-semibold rounded-lg m-3 p-2 bg-[#517FFF] text-white shadow-md">CATEGORIES</h6>
-                        <ul className="space-y-1">
-                            {uniCategory.map(cate => (
-                                <li key={cate} onClick={() => setSelectCategory(cate)}
-                                    className={`cursor-pointer m-3 p-2 rounded-lg transition-colors ${selectCategory === cate
-                                        ? 'text-[#517FFF]' : ''}`}  >   {cate}  </li>))}
-                        </ul>
-                    </div>
-                    <div className="bg-white rounded-lg shadow-lg">
-                        <h6 className="font-semibold rounded-lg m-3 p-2 bg-[#517FFF] text-white shadow-md">TYPE OF JOB</h6>
-                        <ul className="space-y-1">
-                            {uniJobType.map(type => (
-                                <li key={type} onClick={() => setSelectType(type)}
-                                    className={`cursor-pointer m-3 p-2 rounded-lg transition-colors ${selectType === type
-                                        ? 'text-[#517FFF]' : ''}`} > {type}  </li>))}
-                        </ul>
-                    </div>
-                    <div className="bg-white rounded-lg shadow-lg">
-                        <h6 className="font-semibold rounded-lg m-3 p-2 bg-[#517FFF] text-white shadow-md">COMPANY</h6>
-                        <ul className="space-y-1">
-                            {uniCompany.map((c, index) => (
-                                <li key={index} onClick={() => setSelectCompany(c)}
-                                    className={`cursor-pointer m-3 p-2 rounded-lg transition-colors ${selectCompany === c
-                                        ? 'text-[#517FFF]' : ''}`}>{c}</li>))}
-                        </ul>
+                    <div className="space-y-6">
+                        <FilterCard title="CATEGORIES" items={uniCategory}
+                            selectedItem={selectCategory} onItemSelect={setSelectCategory} />
+                        <FilterCard title="TYPE OF JOB" items={uniJobType}
+                            selectedItem={selectType} onItemSelect={setSelectType} />
+                        <FilterCard title="COMPANY" items={uniCompany}
+                            selectedItem={selectCompany} onItemSelect={setSelectCompany} />
                     </div>
                 </div>
                 <div className="px-4 mx-auto py-8 w-5/6">
@@ -85,14 +66,14 @@ const ViewJob = () => {
                             <thead className="bg-blue-500 text-white">
                                 <tr>
                                     <th className="p-3 w-40 text-left font-semibold">Title</th>
-                                    <th className="p-3 w-30 text-left font-semibold">Category</th>
-                                    <th className="p-3 text w-30 text-left font-semibold">Job Type</th>
+                                    <th className="w-30 text-left font-semibold">Category</th>
+                                    <th className="p-3 w-30 text-left font-semibold">Job Type</th>
                                     <th className="p-3 w-30 text-left font-semibold">Level</th>
                                     <th className="p-3 w-30 text-left font-semibold">Posting Date</th>
                                     <th className="p-3 w-30 text-left font-semibold">Deadline</th>
                                     <th className="p-3 text-left font-semibold">Salary</th>
                                     <th className="p-3 w-40 text-left font-semibold">Company</th>
-                                    <th className="p-3 px-4 text-left font-semibold">Status</th>
+                                    <th className="p-3 text-left font-semibold">Status</th>
                                     <th className="p-3 text-left font-semibold">Action</th>
                                 </tr>
                             </thead>
@@ -103,12 +84,12 @@ const ViewJob = () => {
                                         <td >{job.category_name}</td>
                                         <td className="p-3">{job.job_type}</td>
                                         <td className="p-3">{job.experience_level}</td>
-                                        <td className="py-3 px-4">{formatDate(job.created_at)}</td>
-                                        <td className="py-3 px-4">{formatDate(job.deadline)}</td>
+                                        <td className="p-3">{formatDate(job.created_at)}</td>
+                                        <td className="p-3">{formatDate(job.deadline)}</td>
                                         <td className="p-3">{job.salary_min} - {job.salary_max}</td>
-                                        <td className="py-3 px-4">{job.company_name}</td>
-                                        <td className="py-3 px-4">{job.status}</td>
-                                        <td className="py-3 px-4">
+                                        <td className="p-3">{job.company_name}</td>
+                                        <td className="p-3">{job.status}</td>
+                                        <td className="p-3">
                                             <button className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-1 px-3 rounded m-2 transition-colors"
                                                 onClick={() => router.push(`/job/update-job/${job.id}`)}>  Edit
                                             </button>
