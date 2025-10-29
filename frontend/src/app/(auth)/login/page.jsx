@@ -35,8 +35,16 @@ export default function EbayLoginForm() {
         localStorage.setItem("token", response.token);
       }
 
-      setSuccess("Login successful! Redirecting...");
-      router.push("/admin/user-manager");
+      const userData = JSON.parse(localStorage.getItem("user") || "{}");
+      const roleId = userData.role_id || userData?.user?.role_id;
+
+      if (roleId === 1) {
+        router.push("/admin/user-manager");
+      } else if (roleId === 2) {
+        router.push("/recruiter/applications");
+      } else {
+        router.push("/candidate/jobs");
+      }
     } catch (err) {
       setError("Login failed. Please try again.");
     } finally {
@@ -79,8 +87,10 @@ export default function EbayLoginForm() {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <Link href="/login/forgot-password" >
-            <div style={{ textAlign: "right", cursor: 'pointer' }}>Quên mật khẩu</div>
+          <Link href="/login/forgot-password">
+            <div style={{ textAlign: "right", cursor: "pointer" }}>
+              Quên mật khẩu
+            </div>
           </Link>
 
           {/* Login Button */}

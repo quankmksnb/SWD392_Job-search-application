@@ -85,7 +85,7 @@ VALUES
 (3, 3, '2025-11-07 15:30:00', 'video', 'scheduled', NULL, NULL, NOW()),
 (4, 2, '2025-11-08 10:00:00', 'in-person', 'completed', 'Good intern potential.', 7, NOW()),
 (4, 2, '2025-11-09 14:30:00', 'video', 'scheduled', NULL, NULL, NOW()),
-(5, 3, '2025-11-11 11:00:00', 'phone', 'scheduled', NULL, NULL, NOW());
+(5, 3, '2025-11-11 11:00:00', 'phone', 'pending', NULL, NULL, NOW());
 
 -- 13️⃣ Skills
 INSERT INTO skills (name, created_at) VALUES

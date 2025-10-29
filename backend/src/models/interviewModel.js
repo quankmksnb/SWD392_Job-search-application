@@ -19,10 +19,9 @@ export const InterviewModel = {
   },
 
   async getById(id) {
-    const [rows] = await pool.query(
-      `SELECT * FROM interviews WHERE id = ?`,
-      [id]
-    );
+    const [rows] = await pool.query(`SELECT * FROM interviews WHERE id = ?`, [
+      id,
+    ]);
     return rows[0];
   },
 
@@ -37,22 +36,40 @@ export const InterviewModel = {
       rating,
     } = data;
 
-    const [result] = await pool.query(
-      `INSERT INTO interviews (
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+
+      const [result] = await conn.query(
+        `INSERT INTO interviews (
         application_id, interviewer_id, scheduled_date, 
         interview_type, status, feedback, rating, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [
-        application_id,
-        interviewer_id,
-        scheduled_date,
-        interview_type,
-        status || "scheduled",
-        feedback || null,
-        rating || null,
-      ]
-    );
-    return result.insertId;
+        [
+          application_id,
+          interviewer_id,
+          scheduled_date,
+          interview_type,
+          status || "pending",
+          feedback || null,
+          rating || null,
+        ]
+      );
+
+      // 🟢 cập nhật trạng thái ứng viên
+      await conn.query(
+        `UPDATE applications SET status = 'interview_scheduled' WHERE id = ?`,
+        [application_id]
+      );
+
+      await conn.commit();
+      return result.insertId;
+    } catch (err) {
+      await conn.rollback();
+      throw err;
+    } finally {
+      conn.release();
+    }
   },
 
   async update(id, data) {
@@ -76,6 +93,14 @@ export const InterviewModel = {
     const [result] = await pool.query(`DELETE FROM interviews WHERE id = ?`, [
       id,
     ]);
+    return result;
+  },
+
+  async updateStatus(id, status) {
+    const [result] = await pool.query(
+      `UPDATE interviews SET status = ? WHERE id = ?`,
+      [status, id]
+    );
     return result;
   },
 };

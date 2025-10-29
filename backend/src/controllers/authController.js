@@ -6,7 +6,7 @@ import { sendMail } from "../services/mailService.js";
 import { UserModel } from "../models/userModel.js";
 
 const BCRYPT_SALT = 10;
-const DEFAULT_ROLE_ID = 3; // user
+const DEFAULT_ROLE_ID = 3;
 
 export const register = async (req, res) => {
   try {
