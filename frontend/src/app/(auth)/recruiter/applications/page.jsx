@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { Tabs, Table, Tag, Button, message } from "antd";
+import React, { useEffect, useState, useMemo } from "react";
+import { Tabs, Table, Tag, Button, message, Select, Space } from "antd";
 import api from "@/services/api";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
@@ -10,6 +10,22 @@ export default function RecruiterApplicationsPage() {
   const [apps, setApps] = useState([]);
   const [interviews, setInterviews] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // 🔹 Bộ lọc cho Tab A
+  const [filterApp, setFilterApp] = useState({
+    job: null,
+    location: null,
+    status: null,
+  });
+
+  // 🔹 Bộ lọc cho Tab B
+  const [filterInt, setFilterInt] = useState({
+    job: null,
+    location: null,
+    type: null,
+    status: null,
+  });
+
   const router = useRouter();
 
   useEffect(() => {
@@ -58,6 +74,42 @@ export default function RecruiterApplicationsPage() {
     return <Tag color={map[s] || "default"}>{s}</Tag>;
   };
 
+  // ---------------- TAB A FILTER LOGIC ----------------
+  const filteredApps = useMemo(() => {
+    return apps.filter((r) => {
+      return (
+        (!filterApp.job || r.job_title === filterApp.job) &&
+        (!filterApp.location || r.location === filterApp.location) &&
+        (!filterApp.status || r.application_status === filterApp.status)
+      );
+    });
+  }, [apps, filterApp]);
+
+  // ---------------- TAB B FILTER LOGIC ----------------
+  const filteredInterviews = useMemo(() => {
+    return interviews.filter((r) => {
+      return (
+        (!filterInt.job || r.job_title === filterInt.job) &&
+        (!filterInt.location || r.location === filterInt.location) &&
+        (!filterInt.type || r.interview_type === filterInt.type) &&
+        (!filterInt.status || r.interview_status === filterInt.status)
+      );
+    });
+  }, [interviews, filterInt]);
+
+  // ✅ Tạo danh sách unique options
+  const unique = (arr, key) => [...new Set(arr.map((x) => x[key]).filter(Boolean))];
+
+  const jobOptionsA = unique(apps, "job_title").map((v) => ({ label: v, value: v }));
+  const locOptionsA = unique(apps, "location").map((v) => ({ label: v, value: v }));
+  const statusOptionsA = unique(apps, "application_status").map((v) => ({ label: v, value: v }));
+
+  const jobOptionsB = unique(interviews, "job_title").map((v) => ({ label: v, value: v }));
+  const locOptionsB = unique(interviews, "location").map((v) => ({ label: v, value: v }));
+  const typeOptionsB = unique(interviews, "interview_type").map((v) => ({ label: v, value: v }));
+  const statusOptionsB = unique(interviews, "interview_status").map((v) => ({ label: v, value: v }));
+
+  // ------------------ COLUMNS ------------------
   const appCols = [
     {
       title: "Ứng viên",
@@ -89,7 +141,11 @@ export default function RecruiterApplicationsPage() {
           );
         }
         if (["rejected", "accepted"].includes(r.application_status)) {
-          return <Tag color={r.application_status === "rejected" ? "volcano" : "green"}>Đã {r.application_status}</Tag>;
+          return (
+            <Tag color={r.application_status === "rejected" ? "volcano" : "green"}>
+              Đã {r.application_status}
+            </Tag>
+          );
         }
         return null;
       },
@@ -104,19 +160,48 @@ export default function RecruiterApplicationsPage() {
     { title: "Email", dataIndex: "candidate_email" },
     { title: "Job", dataIndex: "job_title" },
     { title: "Vị trí", dataIndex: "location" },
-    { title: "Ngày", dataIndex: "scheduled_date", render: (v) => dayjs(v).format("DD/MM/YYYY HH:mm") },
+    {
+      title: "Ngày",
+      dataIndex: "scheduled_date",
+      render: (v) => dayjs(v).format("DD/MM/YYYY HH:mm"),
+    },
     { title: "Loại", dataIndex: "interview_type" },
-    { title: "Trạng thái", dataIndex: "interview_status", render: (s) => <Tag>{s}</Tag> },
+    {
+      title: "Trạng thái",
+      dataIndex: "interview_status",
+      render: (s) => {
+        const color =
+          s === "completed"
+            ? "green"
+            : s === "cancelled"
+            ? "volcano"
+            : "blue";
+        return <Tag color={color}>{s}</Tag>;
+      },
+    },
     {
       title: "Hành động",
-      render: (_, r) => (
-        <Button onClick={() => router.push(`/recruiter/interviews/${r.interview_id}`)}>
-          Xem/Sửa
-        </Button>
-      ),
+      render: (_, r) => {
+        if (["completed", "cancelled"].includes(r.interview_status)) {
+          return (
+            <Tag color={r.interview_status === "completed" ? "green" : "volcano"}>
+              {r.interview_status === "completed" ? "Đã hoàn tất" : "Đã hủy"}
+            </Tag>
+          );
+        }
+        return (
+          <Button
+            type="default"
+            onClick={() => router.push(`/recruiter/interviews/${r.interview_id}`)}
+          >
+            Xem/Sửa
+          </Button>
+        );
+      },
     },
   ];
 
+  // ------------------- RENDER -------------------
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Applications Dashboard</h1>
@@ -127,25 +212,86 @@ export default function RecruiterApplicationsPage() {
             key: "apps",
             label: "A. Applications List",
             children: (
-              <Table
-                columns={appCols}
-                dataSource={apps}
-                rowKey="application_id"
-                loading={loading}
-                bordered
-              />
+              <>
+                {/* 🧩 Bộ lọc Tab A */}
+                <Space className="mb-3" wrap>
+                  <Select
+                    placeholder="Job"
+                    allowClear
+                    options={jobOptionsA}
+                    onChange={(v) => setFilterApp({ ...filterApp, job: v })}
+                    style={{ width: 160 }}
+                  />
+                  <Select
+                    placeholder="Vị trí"
+                    allowClear
+                    options={locOptionsA}
+                    onChange={(v) => setFilterApp({ ...filterApp, location: v })}
+                    style={{ width: 160 }}
+                  />
+                  <Select
+                    placeholder="Trạng thái"
+                    allowClear
+                    options={statusOptionsA}
+                    onChange={(v) => setFilterApp({ ...filterApp, status: v })}
+                    style={{ width: 160 }}
+                  />
+                </Space>
+
+                <Table
+                  columns={appCols}
+                  dataSource={filteredApps}
+                  rowKey="application_id"
+                  loading={loading}
+                  bordered
+                />
+              </>
             ),
           },
           {
             key: "interviews",
             label: "B. Interview List",
             children: (
-              <Table
-                columns={interviewCols}
-                dataSource={interviews}
-                rowKey="interview_id"
-                bordered
-              />
+              <>
+                {/* 🧩 Bộ lọc Tab B */}
+                <Space className="mb-3" wrap>
+                  <Select
+                    placeholder="Job"
+                    allowClear
+                    options={jobOptionsB}
+                    onChange={(v) => setFilterInt({ ...filterInt, job: v })}
+                    style={{ width: 160 }}
+                  />
+                  <Select
+                    placeholder="Vị trí"
+                    allowClear
+                    options={locOptionsB}
+                    onChange={(v) => setFilterInt({ ...filterInt, location: v })}
+                    style={{ width: 160 }}
+                  />
+                  <Select
+                    placeholder="Loại"
+                    allowClear
+                    options={typeOptionsB}
+                    onChange={(v) => setFilterInt({ ...filterInt, type: v })}
+                    style={{ width: 160 }}
+                  />
+                  <Select
+                    placeholder="Trạng thái"
+                    allowClear
+                    options={statusOptionsB}
+                    onChange={(v) => setFilterInt({ ...filterInt, status: v })}
+                    style={{ width: 160 }}
+                  />
+                </Space>
+
+                <Table
+                  columns={interviewCols}
+                  dataSource={filteredInterviews}
+                  rowKey="interview_id"
+                  bordered
+                />
+              </>
             ),
           },
         ]}

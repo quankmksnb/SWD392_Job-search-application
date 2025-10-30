@@ -43,7 +43,7 @@ export default function RecruiterInterviewDetail() {
     }
   };
 
-  // 🟢 Đánh dấu Passed (completed)
+  // ✅ PASSED → interview.completed + application.accepted
   const markPassed = async () => {
     modal.confirm({
       title: "Xác nhận kết quả phỏng vấn",
@@ -52,7 +52,10 @@ export default function RecruiterInterviewDetail() {
       cancelText: "Hủy",
       onOk: async () => {
         try {
-          await api.put(`/interviews/${id}`, { status: "completed" });
+          await api.put(`/interviews/${id}`, {
+            status: "completed",
+            result: "passed",
+          });
           message.success("✅ Ứng viên đã passed phỏng vấn");
           setTimeout(() => router.push("/recruiter/applications"), 1000);
         } catch {
@@ -62,7 +65,7 @@ export default function RecruiterInterviewDetail() {
     });
   };
 
-  // 🔴 Đánh dấu Not Passed (cancelled)
+  // ❌ NOT PASSED → interview.completed + application.rejected
   const markNotPassed = async () => {
     modal.confirm({
       title: "Xác nhận kết quả phỏng vấn",
@@ -71,11 +74,33 @@ export default function RecruiterInterviewDetail() {
       cancelText: "Hủy",
       onOk: async () => {
         try {
-          await api.put(`/interviews/${id}`, { status: "cancelled" });
+          await api.put(`/interviews/${id}`, {
+            status: "completed",
+            result: "not_passed",
+          });
           message.success("⚠️ Ứng viên không vượt qua phỏng vấn");
           setTimeout(() => router.push("/recruiter/applications"), 1000);
         } catch {
           message.error("❌ Cập nhật thất bại");
+        }
+      },
+    });
+  };
+
+  // 🔴 HỦY CUỘC PHỎNG VẤN → interview.cancelled + application.rejected
+  const cancelInterview = async () => {
+    modal.confirm({
+      title: "Hủy cuộc phỏng vấn",
+      content: "Bạn có chắc muốn hủy cuộc phỏng vấn này không?",
+      okText: "Xác nhận hủy",
+      cancelText: "Đóng",
+      onOk: async () => {
+        try {
+          await api.put(`/interviews/${id}`, { status: "cancelled" });
+          message.success("🔴 Cuộc phỏng vấn đã bị hủy");
+          setTimeout(() => router.push("/recruiter/applications"), 1000);
+        } catch {
+          message.error("❌ Hủy thất bại");
         }
       },
     });
@@ -107,7 +132,11 @@ export default function RecruiterInterviewDetail() {
             name="scheduled_date"
             rules={[{ required: true, message: "Chọn ngày giờ phỏng vấn" }]}
           >
-            <DatePicker showTime style={{ width: "100%" }} format="YYYY-MM-DD HH:mm:ss" />
+            <DatePicker
+              showTime
+              style={{ width: "100%" }}
+              format="YYYY-MM-DD HH:mm:ss"
+            />
           </Form.Item>
 
           <Form.Item
@@ -129,12 +158,20 @@ export default function RecruiterInterviewDetail() {
               Cập nhật
             </Button>
 
-            <Button onClick={markPassed} type="default" style={{ color: "green", borderColor: "green" }}>
+            <Button
+              onClick={markPassed}
+              type="default"
+              style={{ color: "green", borderColor: "green" }}
+            >
               Passed
             </Button>
 
             <Button onClick={markNotPassed} danger>
               Not Passed
+            </Button>
+
+            <Button onClick={cancelInterview} danger type="default">
+              Hủy cuộc phỏng vấn
             </Button>
           </div>
         </Form>

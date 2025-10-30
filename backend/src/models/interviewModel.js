@@ -77,38 +77,52 @@ export const InterviewModel = {
     try {
       await conn.beginTransaction();
 
-      // 🔹 Update bảng interviews
+      // ✅ Bỏ qua "result" khi build câu UPDATE
       const fields = [];
       const values = [];
 
       Object.entries(data).forEach(([key, value]) => {
+        if (key === "result") return; // 🟢 Dòng này rất quan trọng!
         fields.push(`${key} = ?`);
         values.push(value);
       });
       values.push(id);
 
-      const [result] = await conn.query(
-        `UPDATE interviews SET ${fields.join(", ")} WHERE id = ?`,
-        values
-      );
-
-      // 🔹 Nếu có cập nhật trạng thái thì cần đồng bộ sang applications
-      if (data.status) {
-        const [rows] = await conn.query(
-          `SELECT application_id FROM interviews WHERE id = ?`,
-          [id]
+      // ✅ Chỉ chạy UPDATE nếu có field hợp lệ
+      if (fields.length > 0) {
+        await conn.query(
+          `UPDATE interviews SET ${fields.join(", ")} WHERE id = ?`,
+          values
         );
-        const appId = rows[0]?.application_id;
+      }
 
-        if (appId) {
-          if (data.status === "completed") {
-            await conn.query(
-              `UPDATE applications SET status = 'accepted' WHERE id = ?`,
-              [appId]
-            );
-          } else if (data.status === "cancelled") {
+      // ✅ Lấy application_id để đồng bộ trạng thái
+      const [rows] = await conn.query(
+        `SELECT application_id FROM interviews WHERE id = ?`,
+        [id]
+      );
+      const appId = rows[0]?.application_id;
+
+      if (appId) {
+        // 🔴 Nếu bị hủy
+        if (data.status === "cancelled") {
+          await conn.query(
+            `UPDATE applications SET status = 'rejected' WHERE id = ?`,
+            [appId]
+          );
+        }
+        // 🟢 Nếu completed
+        else if (data.status === "completed") {
+          if (data.result === "not_passed") {
+            // ❌ Không đạt
             await conn.query(
               `UPDATE applications SET status = 'rejected' WHERE id = ?`,
+              [appId]
+            );
+          } else {
+            // ✅ Đạt
+            await conn.query(
+              `UPDATE applications SET status = 'accepted' WHERE id = ?`,
               [appId]
             );
           }
@@ -116,9 +130,10 @@ export const InterviewModel = {
       }
 
       await conn.commit();
-      return result;
+      return { success: true };
     } catch (e) {
       await conn.rollback();
+      console.error("❌ Interview update error:", e.message);
       throw e;
     } finally {
       conn.release();
