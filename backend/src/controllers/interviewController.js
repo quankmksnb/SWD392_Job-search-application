@@ -1,15 +1,62 @@
 // src/controllers/interviewController.js
+import pool from "../../config/db.js";
 import { InterviewModel } from "../models/interviewModel.js";
 
 export const getAllInterviews = async (req, res) => {
   try {
-    const interviews = await InterviewModel.getAll();
-    res.status(200).json(interviews);
+    const recruiterId = req.query.recruiter_id;
+    const { job_id, interview_type, status, start_date, end_date } = req.query;
+
+    let whereClause = `WHERE cr.recruiter_id = ?`;
+    const params = [recruiterId];
+
+    if (job_id) {
+      whereClause += ` AND j.id = ?`;
+      params.push(job_id);
+    }
+
+    if (interview_type) {
+      whereClause += ` AND i.interview_type = ?`;
+      params.push(interview_type);
+    }
+
+    if (status) {
+      whereClause += ` AND i.status = ?`;
+      params.push(status);
+    }
+
+    if (start_date && end_date) {
+      whereClause += ` AND i.scheduled_date BETWEEN ? AND ?`;
+      params.push(start_date, end_date);
+    }
+
+    const [rows] = await pool.query(
+      `
+      SELECT 
+        i.*, 
+        j.title AS job_title, 
+        j.id AS job_id,
+        u.first_name AS interviewer_first_name, 
+        u.last_name AS interviewer_last_name
+      FROM interviews i
+      JOIN applications a ON i.application_id = a.id
+      JOIN job_postings j ON a.job_posting_id = j.id
+      JOIN companies c ON j.company_id = c.id
+      JOIN company_recruiters cr ON c.id = cr.company_id
+      JOIN users u ON i.interviewer_id = u.id
+      ${whereClause}
+      ORDER BY i.scheduled_date DESC
+      `,
+      params
+    );
+
+    res.status(200).json(rows);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Failed to fetch interviews" });
   }
 };
+
 
 export const getInterviewById = async (req, res) => {
   try {

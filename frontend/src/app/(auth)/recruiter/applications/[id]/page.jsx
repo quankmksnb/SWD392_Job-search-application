@@ -1,120 +1,288 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { Card, Button, Form, Modal, DatePicker, Select, message, Tag } from "antd";
+import {
+  Table,
+  Tabs,
+  Select,
+  Button,
+  DatePicker,
+  message,
+  Form,
+  Modal,
+} from "antd";
 import api from "@/services/api";
 import dayjs from "dayjs";
 
-export default function RecruiterApplicationDetail() {
-  const { id } = useParams(); // application_id
-  const router = useRouter();
-  const [record, setRecord] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [form] = Form.useForm();
-  const [recruiterId, setRecruiterId] = useState(null);
+const { RangePicker } = DatePicker;
+const { TabPane } = Tabs;
 
+export default function RecruiterApplicationsPage() {
+  const [recruiter, setRecruiter] = useState(null);
+
+  // Dữ liệu hiển thị
+  const [applications, setApplications] = useState([]);
+  const [interviews, setInterviews] = useState([]);
+  const [jobs, setJobs] = useState([]);
+  const [locations, setLocations] = useState([]);
+
+  // Bộ lọc tab A và B
+  const [filtersA, setFiltersA] = useState({
+    job_id: null,
+    location: null,
+    status: null,
+  });
+
+  const [filtersB, setFiltersB] = useState({
+    job_id: null,
+    interview_type: null,
+    status: null,
+    dateRange: [],
+  });
+
+  // Khởi tạo recruiter
   useEffect(() => {
-    const stored = typeof window !== "undefined" ? localStorage.getItem("user") : null;
-    if (stored) {
-      const u = JSON.parse(stored);
-      setRecruiterId(u?.id || u?.user?.id);
+    try {
+      const stored = JSON.parse(localStorage.getItem("user") || "{}");
+      setRecruiter(stored?.user || stored);
+    } catch (err) {
+      console.error("Lỗi parse user:", err);
     }
   }, []);
 
-  useEffect(() => {
-    if (!recruiterId) return;
-    fetchData();
-  }, [recruiterId]);
-
-  const fetchData = async () => {
+  // Lấy jobs
+  const fetchJobs = async () => {
+    if (!recruiter?.id) return;
     try {
-      const res = await api.get(`/recruiter/applications?recruiter_id=${recruiterId}`);
-      const found = res.data.find((a) => a.application_id == id);
-      setRecord(found);
+      const res = await api.get(`/recruiter/jobs?recruiter_id=${recruiter.id}`);
+      setJobs(res.data);
+
+      const uniqueLocs = [
+        ...new Set(res.data.map((j) => j.location).filter(Boolean)),
+      ];
+      setLocations(uniqueLocs);
     } catch (e) {
-      message.error("Không tải được hồ sơ");
+      console.error("❌ Lỗi tải job:", e);
     }
   };
 
-  const handleCreateInterview = async (values) => {
+  // Lấy ứng viên
+  const fetchApplications = async () => {
+    if (!recruiter?.id) return;
     try {
-      await api.post("/interviews", {
-        application_id: record.application_id,
-        interviewer_id: recruiterId,
-        scheduled_date: values.scheduled_date.format("YYYY-MM-DD HH:mm:ss"), // ✅ format FE
-        interview_type: values.interview_type,
-        status: "scheduled",
+      const params = new URLSearchParams({
+        recruiter_id: recruiter.id,
+        ...Object.fromEntries(Object.entries(filtersA).filter(([_, v]) => v)),
       });
-      message.success("Đã tạo lịch & chuyển trạng thái shortlisted");
-      router.push("/recruiter/applications");
+      const res = await api.get(`/recruiter/applications?${params.toString()}`);
+      setApplications(res.data);
     } catch (e) {
-      message.error("Tạo lịch thất bại");
+      console.error("❌ Lỗi tải ứng viên:", e);
+      message.error("Không tải được danh sách ứng viên");
     }
   };
 
-  const markRejected = async () => {
-    Modal.confirm({
-      title: "Xác nhận từ chối",
-      content: "Đánh dấu ứng viên không phù hợp?",
-      onOk: async () => {
-        try {
-          await api.put(`/applications/${id}/status`, { status: "rejected" });
-          message.success("Đã cập nhật trạng thái");
-          router.push("/recruiter/applications");
-        } catch {
-          message.error("Cập nhật thất bại");
-        }
-      },
-    });
+  // Lấy lịch phỏng vấn
+  const fetchInterviews = async () => {
+    if (!recruiter?.id) return;
+    try {
+      const params = new URLSearchParams({
+        recruiter_id: recruiter.id,
+        job_id: filtersB.job_id || "",
+        interview_type: filtersB.interview_type || "",
+        status: filtersB.status || "",
+      });
+
+      if (filtersB.dateRange?.length === 2) {
+        params.append("date_from", filtersB.dateRange[0].format("YYYY-MM-DD"));
+        params.append("date_to", filtersB.dateRange[1].format("YYYY-MM-DD"));
+      }
+
+      const res = await api.get(`/interviews?${params.toString()}`);
+      setInterviews(res.data);
+    } catch (e) {
+      console.error("❌ Lỗi tải interview:", e);
+      message.error("Không tải được lịch phỏng vấn");
+    }
   };
 
-  if (!record) return <div className="p-6">Đang tải...</div>;
+  useEffect(() => {
+    if (!recruiter?.id) return;
+    fetchJobs();
+    fetchApplications();
+    fetchInterviews();
+  }, [recruiter]);
+
+  // Cột Tab A
+  const columnsA = [
+    { title: "Tên ứng viên", dataIndex: "candidate_first_name", key: "candidate_first_name" },
+    { title: "Email", dataIndex: "candidate_email", key: "candidate_email" },
+    { title: "Job", dataIndex: "job_title", key: "job_title" },
+    { title: "Vị trí", dataIndex: "location", key: "location" },
+    { title: "Trạng thái", dataIndex: "application_status", key: "application_status" },
+    {
+      title: "Hành động",
+      key: "actions",
+      render: (_, record) => (
+        <>
+          {record.application_status === "submitted" || record.application_status === "reviewed" ? (
+            <Button type="link" href={`/recruiter/applications/${record.application_id}`}>
+              Xem hồ sơ
+            </Button>
+          ) : record.application_status === "shortlisted" ? (
+            <Button type="link" href={`/recruiter/interviews/${record.application_id}`}>
+              Xem/Sửa lịch phỏng vấn
+            </Button>
+          ) : (
+            "-"
+          )}
+        </>
+      ),
+    },
+  ];
+
+  // Cột Tab B
+  const columnsB = [
+    { title: "Ứng viên", dataIndex: "candidate_name", key: "candidate_name" },
+    { title: "Job", dataIndex: "job_title", key: "job_title" },
+    { title: "Ngày phỏng vấn", dataIndex: "scheduled_date", key: "scheduled_date",
+      render: (d) => (d ? dayjs(d).format("DD/MM/YYYY HH:mm") : "-")
+    },
+    { title: "Loại phỏng vấn", dataIndex: "interview_type", key: "interview_type" },
+    { title: "Trạng thái", dataIndex: "status", key: "status" },
+    {
+      title: "Hành động",
+      key: "actions",
+      render: (_, record) => (
+        <Button type="link" href={`/recruiter/interviews/${record.id}`}>
+          Xem chi tiết
+        </Button>
+      ),
+    },
+  ];
 
   return (
-    <div className="p-6">
-      <Card title="Chi tiết hồ sơ">
-        <p><b>Họ tên:</b> {record.candidate_first_name} {record.candidate_last_name}</p>
-        <p><b>Email:</b> {record.candidate_email}</p>
-        <p><b>Vị trí:</b> {record.job_title} — {record.location}</p>
-        <p><b>Trạng thái ứng dụng:</b> <Tag>{record.application_status}</Tag></p>
-
-        <div className="flex gap-3 mt-4">
-          <Button type="primary" onClick={() => setModalOpen(true)}>Phù hợp (Tạo lịch)</Button>
-          <Button danger onClick={markRejected}>Ứng viên chưa phù hợp</Button>
-        </div>
-      </Card>
-
-      <Modal
-        title="Tạo lịch phỏng vấn"
-        open={modalOpen}
-        onCancel={() => setModalOpen(false)}
-        onOk={() => form.submit()}
-        okText="Tạo"
-        cancelText="Hủy"
-      >
-        <Form form={form} layout="vertical" onFinish={handleCreateInterview}>
-          <Form.Item
-            label="Ngày phỏng vấn"
-            name="scheduled_date"
-            rules={[{ required: true, message: "Chọn ngày giờ" }]}
-          >
-            <DatePicker showTime style={{ width: "100%" }} format="YYYY-MM-DD HH:mm:ss" />
-          </Form.Item>
-          <Form.Item
-            label="Hình thức"
-            name="interview_type"
-            rules={[{ required: true, message: "Chọn hình thức" }]}
-          >
+    <div className="p-6 bg-white rounded-xl shadow-sm">
+      <Tabs defaultActiveKey="A">
+        {/* 🔹 Tab A: Applications List */}
+        <TabPane tab="A. Applications List" key="A">
+          <div className="flex flex-wrap gap-3 mb-4 items-center">
+            {/* Lọc theo Job */}
             <Select
-              options={[
-                { value: "in-person", label: "Trực tiếp" },
-                { value: "video", label: "Video" },
-                { value: "phone", label: "Điện thoại" },
-              ]}
+              allowClear
+              placeholder="Chọn Job"
+              style={{ width: 200 }}
+              onChange={(value) => setFiltersA((prev) => ({ ...prev, job_id: value }))}
+            >
+              {jobs.map((job) => (
+                <Select.Option key={job.job_id} value={job.job_id}>
+                  {job.title}
+                </Select.Option>
+              ))}
+            </Select>
+
+            {/* Lọc theo Vị trí */}
+            <Select
+              allowClear
+              placeholder="Chọn vị trí"
+              style={{ width: 200 }}
+              onChange={(value) => setFiltersA((prev) => ({ ...prev, location: value }))}
+            >
+              {locations.map((loc) => (
+                <Select.Option key={loc} value={loc}>
+                  {loc}
+                </Select.Option>
+              ))}
+            </Select>
+
+            {/* Lọc theo Trạng thái */}
+            <Select
+              allowClear
+              placeholder="Trạng thái hồ sơ"
+              style={{ width: 180 }}
+              onChange={(value) => setFiltersA((prev) => ({ ...prev, status: value }))}
+            >
+              <Select.Option value="submitted">Chờ duyệt</Select.Option>
+              <Select.Option value="reviewed">Đã xem</Select.Option>
+              <Select.Option value="shortlisted">Đã chọn</Select.Option>
+              <Select.Option value="rejected">Đã loại</Select.Option>
+              <Select.Option value="accepted">Đã nhận</Select.Option>
+            </Select>
+
+            <Button type="primary" onClick={fetchApplications}>
+              Lọc
+            </Button>
+          </div>
+
+          <Table
+            columns={columnsA}
+            dataSource={applications}
+            rowKey="application_id"
+            pagination={{ pageSize: 10 }}
+          />
+        </TabPane>
+
+        {/* 🔹 Tab B: Interview List */}
+        <TabPane tab="B. Interview List" key="B">
+          <div className="flex flex-wrap gap-3 mb-4 items-center">
+            {/* Job */}
+            <Select
+              allowClear
+              placeholder="Chọn Job"
+              style={{ width: 200 }}
+              onChange={(value) => setFiltersB((prev) => ({ ...prev, job_id: value }))}
+            >
+              {jobs.map((job) => (
+                <Select.Option key={job.job_id} value={job.job_id}>
+                  {job.title}
+                </Select.Option>
+              ))}
+            </Select>
+
+            {/* Loại phỏng vấn */}
+            <Select
+              allowClear
+              placeholder="Hình thức phỏng vấn"
+              style={{ width: 180 }}
+              onChange={(value) => setFiltersB((prev) => ({ ...prev, interview_type: value }))}
+            >
+              <Select.Option value="in-person">Trực tiếp</Select.Option>
+              <Select.Option value="video">Video</Select.Option>
+              <Select.Option value="phone">Điện thoại</Select.Option>
+            </Select>
+
+            {/* Trạng thái */}
+            <Select
+              allowClear
+              placeholder="Trạng thái"
+              style={{ width: 160 }}
+              onChange={(value) => setFiltersB((prev) => ({ ...prev, status: value }))}
+            >
+              <Select.Option value="scheduled">Đang lên lịch</Select.Option>
+              <Select.Option value="completed">Hoàn thành</Select.Option>
+              <Select.Option value="cancelled">Đã hủy</Select.Option>
+            </Select>
+
+            {/* Khoảng thời gian */}
+            <RangePicker
+              style={{ width: 260 }}
+              onChange={(dates) => setFiltersB((prev) => ({ ...prev, dateRange: dates }))}
+              format="DD/MM/YYYY"
             />
-          </Form.Item>
-        </Form>
-      </Modal>
+
+            <Button type="primary" onClick={fetchInterviews}>
+              Lọc
+            </Button>
+          </div>
+
+          <Table
+            columns={columnsB}
+            dataSource={interviews}
+            rowKey="id"
+            pagination={{ pageSize: 10 }}
+          />
+        </TabPane>
+      </Tabs>
     </div>
   );
 }

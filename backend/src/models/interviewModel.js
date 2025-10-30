@@ -73,22 +73,57 @@ export const InterviewModel = {
   },
 
   async update(id, data) {
-    const fields = [];
-    const values = [];
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
 
-    Object.entries(data).forEach(([key, value]) => {
-      fields.push(`${key} = ?`);
-      values.push(value);
-    });
+      // 🔹 Update bảng interviews
+      const fields = [];
+      const values = [];
 
-    values.push(id);
-    const [result] = await pool.query(
-      `UPDATE interviews SET ${fields.join(", ")} WHERE id = ?`,
-      values
-    );
-    return result;
+      Object.entries(data).forEach(([key, value]) => {
+        fields.push(`${key} = ?`);
+        values.push(value);
+      });
+      values.push(id);
+
+      const [result] = await conn.query(
+        `UPDATE interviews SET ${fields.join(", ")} WHERE id = ?`,
+        values
+      );
+
+      // 🔹 Nếu có cập nhật trạng thái thì cần đồng bộ sang applications
+      if (data.status) {
+        const [rows] = await conn.query(
+          `SELECT application_id FROM interviews WHERE id = ?`,
+          [id]
+        );
+        const appId = rows[0]?.application_id;
+
+        if (appId) {
+          if (data.status === "completed") {
+            await conn.query(
+              `UPDATE applications SET status = 'accepted' WHERE id = ?`,
+              [appId]
+            );
+          } else if (data.status === "cancelled") {
+            await conn.query(
+              `UPDATE applications SET status = 'rejected' WHERE id = ?`,
+              [appId]
+            );
+          }
+        }
+      }
+
+      await conn.commit();
+      return result;
+    } catch (e) {
+      await conn.rollback();
+      throw e;
+    } finally {
+      conn.release();
+    }
   },
-
   async delete(id) {
     const [result] = await pool.query(`DELETE FROM interviews WHERE id = ?`, [
       id,

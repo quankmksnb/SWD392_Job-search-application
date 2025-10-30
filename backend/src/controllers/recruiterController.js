@@ -7,51 +7,62 @@ import pool from "../../config/db.js";
 export const listRecruiterApplications = async (req, res) => {
   try {
     const recruiterId = Number(req.query.recruiter_id || req.body.recruiter_id);
-    if (!recruiterId) return res.status(400).json({ message: "Thiếu recruiter_id." });
+    if (!recruiterId)
+      return res.status(400).json({ message: "Thiếu recruiter_id." });
+
+    const { job_id, location, status, search } = req.query;
+
+    let whereClause = `WHERE cr.recruiter_id = ?`;
+    const params = [recruiterId];
+
+    if (job_id) {
+      whereClause += ` AND j.id = ?`;
+      params.push(job_id);
+    }
+
+    if (location) {
+      whereClause += ` AND j.location LIKE ?`;
+      params.push(`%${location}%`);
+    }
+
+    if (status) {
+      whereClause += ` AND a.status = ?`;
+      params.push(status);
+    }
+
+    if (search) {
+      whereClause += ` AND (u.first_name LIKE ? OR u.last_name LIKE ? OR u.email LIKE ?)`;
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    }
 
     const [rows] = await pool.query(
       `
-      SELECT
+      SELECT 
         a.id AS application_id,
         a.status AS application_status,
         a.applied_at,
-
-        u.id AS candidate_user_id,
         u.first_name AS candidate_first_name,
         u.last_name AS candidate_last_name,
         u.email AS candidate_email,
-
         j.id AS job_id,
         j.title AS job_title,
         j.location,
         j.experience_level,
-        j.status AS job_status,
         comp.name AS company_name,
-
-        -- Lấy interview mới nhất (nếu có)
-        li.id AS interview_id,
-        li.scheduled_date,
-        li.interview_type,
-        li.status AS interview_status
-
+        i.id AS interview_id,
+        i.status AS interview_status,
+        i.scheduled_date
       FROM applications a
       JOIN candidate_profiles cp ON a.candidate_id = cp.id
       JOIN users u ON cp.user_id = u.id
       JOIN job_postings j ON a.job_posting_id = j.id
       JOIN companies comp ON j.company_id = comp.id
       JOIN company_recruiters cr ON j.company_id = cr.company_id
-      LEFT JOIN (
-        SELECT i1.*
-        FROM interviews i1
-        JOIN (
-          SELECT application_id, MAX(created_at) AS mx
-          FROM interviews GROUP BY application_id
-        ) x ON i1.application_id = x.application_id AND i1.created_at = x.mx
-      ) li ON li.application_id = a.id
-      WHERE cr.recruiter_id = ?
+      LEFT JOIN interviews i ON a.id = i.application_id
+      ${whereClause}
       ORDER BY a.applied_at DESC
       `,
-      [recruiterId]
+      params
     );
 
     res.json(rows);
@@ -105,9 +116,11 @@ export const listRecruiterJobs = async (req, res) => {
 export const listRecruiterInterviews = async (req, res) => {
   try {
     const recruiterId = Number(req.query.recruiter_id || req.body.recruiter_id);
-    if (!recruiterId) return res.status(400).json({ message: "Thiếu recruiter_id." });
+    if (!recruiterId)
+      return res.status(400).json({ message: "Thiếu recruiter_id." });
 
-    const [rows] = await pool.query(`
+    const [rows] = await pool.query(
+      `
       SELECT
         i.id AS interview_id,
         i.scheduled_date,
@@ -127,7 +140,9 @@ export const listRecruiterInterviews = async (req, res) => {
       JOIN company_recruiters cr ON j.company_id = cr.company_id
       WHERE cr.recruiter_id = ?
       ORDER BY i.scheduled_date DESC
-    `, [recruiterId]);
+    `,
+      [recruiterId]
+    );
 
     res.json(rows);
   } catch (e) {
