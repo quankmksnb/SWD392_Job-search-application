@@ -1,17 +1,20 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, Button, Form, Modal, DatePicker, Select, message, Tag } from "antd";
+import { Card, Button, Form, Modal, DatePicker, Select, App } from "antd";
 import api from "@/services/api";
 import dayjs from "dayjs";
 
 export default function RecruiterApplicationDetail() {
-  const { id } = useParams(); // application_id
+  const { id } = useParams();
   const router = useRouter();
   const [record, setRecord] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [form] = Form.useForm();
   const [recruiterId, setRecruiterId] = useState(null);
+
+  // ✅ Lấy instance modal & message từ context (AntdApp)
+  const { modal, message } = App.useApp();
 
   useEffect(() => {
     const stored = typeof window !== "undefined" ? localStorage.getItem("user") : null;
@@ -41,7 +44,7 @@ export default function RecruiterApplicationDetail() {
       await api.post("/interviews", {
         application_id: record.application_id,
         interviewer_id: recruiterId,
-        scheduled_date: values.scheduled_date.format("YYYY-MM-DD HH:mm:ss"), // ✅ format FE
+        scheduled_date: values.scheduled_date.format("YYYY-MM-DD HH:mm:ss"),
         interview_type: values.interview_type,
         status: "scheduled",
       });
@@ -52,17 +55,21 @@ export default function RecruiterApplicationDetail() {
     }
   };
 
+  // ✅ Fix chỗ này — dùng modal từ App.useApp()
   const markRejected = async () => {
-    Modal.confirm({
-      title: "Xác nhận từ chối",
-      content: "Đánh dấu ứng viên không phù hợp?",
+    modal.confirm({
+      title: "Xác nhận từ chối ứng viên",
+      content: "Bạn có chắc muốn đánh dấu ứng viên này là chưa phù hợp không?",
+      okText: "Đồng ý",
+      cancelText: "Hủy",
       onOk: async () => {
         try {
           await api.put(`/applications/${id}/status`, { status: "rejected" });
-          message.success("Đã cập nhật trạng thái");
+          message.success("Đã cập nhật trạng thái ứng viên");
           router.push("/recruiter/applications");
-        } catch {
+        } catch (e) {
           message.error("Cập nhật thất bại");
+          console.error(e);
         }
       },
     });
@@ -73,17 +80,30 @@ export default function RecruiterApplicationDetail() {
   return (
     <div className="p-6">
       <Card title="Chi tiết hồ sơ">
-        <p><b>Họ tên:</b> {record.candidate_first_name} {record.candidate_last_name}</p>
-        <p><b>Email:</b> {record.candidate_email}</p>
-        <p><b>Vị trí:</b> {record.job_title} — {record.location}</p>
-        <p><b>Trạng thái ứng dụng:</b> <Tag>{record.application_status}</Tag></p>
+        <p>
+          <b>Họ tên:</b> {record.candidate_first_name} {record.candidate_last_name}
+        </p>
+        <p>
+          <b>Email:</b> {record.candidate_email}
+        </p>
+        <p>
+          <b>Vị trí:</b> {record.job_title} — {record.location}
+        </p>
+        <p>
+          <b>Trạng thái ứng dụng:</b> {record.application_status}
+        </p>
 
         <div className="flex gap-3 mt-4">
-          <Button type="primary" onClick={() => setModalOpen(true)}>Phù hợp (Tạo lịch)</Button>
-          <Button danger onClick={markRejected}>Ứng viên chưa phù hợp</Button>
+          <Button type="primary" onClick={() => setModalOpen(true)}>
+            Phù hợp (Tạo lịch)
+          </Button>
+          <Button danger onClick={markRejected}>
+            Ứng viên chưa phù hợp
+          </Button>
         </div>
       </Card>
 
+      {/* Modal tạo lịch phỏng vấn */}
       <Modal
         title="Tạo lịch phỏng vấn"
         open={modalOpen}
