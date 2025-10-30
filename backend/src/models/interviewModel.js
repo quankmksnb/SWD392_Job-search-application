@@ -29,9 +29,9 @@ export const InterviewModel = {
     const {
       application_id,
       interviewer_id,
-      scheduled_date,
+      scheduled_date, // FE gửi "YYYY-MM-DD HH:mm:ss"
       interview_type,
-      status,
+      status, // default 'scheduled'
       feedback,
       rating,
     } = data;
@@ -41,32 +41,32 @@ export const InterviewModel = {
       await conn.beginTransaction();
 
       const [result] = await conn.query(
-        `INSERT INTO interviews (
-        application_id, interviewer_id, scheduled_date, 
-        interview_type, status, feedback, rating, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+        `INSERT INTO interviews(
+          application_id, interviewer_id, scheduled_date,
+          interview_type, status, feedback, rating, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           application_id,
           interviewer_id,
-          scheduled_date,
+          scheduled_date, // ✅ FE đã format
           interview_type,
-          status || "pending",
+          status || "scheduled",
           feedback || null,
           rating || null,
         ]
       );
 
-      // 🟢 cập nhật trạng thái ứng viên
+      // ✅ chuyển trạng thái application sang shortlisted
       await conn.query(
-        `UPDATE applications SET status = 'interview_scheduled' WHERE id = ?`,
+        `UPDATE applications SET status = 'shortlisted' WHERE id = ?`,
         [application_id]
       );
 
       await conn.commit();
       return result.insertId;
-    } catch (err) {
+    } catch (e) {
       await conn.rollback();
-      throw err;
+      throw e;
     } finally {
       conn.release();
     }

@@ -20,13 +20,13 @@ INSERT INTO role_permissions (role_id, permission_id) VALUES
 
 -- 4️⃣ Users
 INSERT INTO users (email, password_hash, first_name, last_name, role_id, status, created_at) VALUES
-('admin@example.com', 'hash123', 'Admin', 'User', 1, 'active', NOW()),
-('recruiter@fpt.com', 'hash456', 'Lan', 'Nguyen', 2, 'active', NOW()),
-('recruiter@vng.com', 'hash789', 'Hung', 'Pham', 2, 'active', NOW()),
-('candidate1@gmail.com', 'hash001', 'Huy', 'Tran', 3, 'active', NOW()),
-('candidate2@gmail.com', 'hash002', 'Hoa', 'Pham', 3, 'active', NOW()),
-('candidate3@gmail.com', 'hash003', 'Khanh', 'Le', 3, 'active', NOW()),
-('candidate4@gmail.com', 'hash004', 'Tuan', 'Do', 3, 'active', NOW());
+('admin@example.com', '$2b$10$9Okz9yx8u8W9IVbUWTceTejERisork6lysOS46zPeoFXl3yH6oSaS', 'Admin', 'User', 1, 'active', NOW()),
+('recruiter@fpt.com', '$2b$10$9Okz9yx8u8W9IVbUWTceTejERisork6lysOS46zPeoFXl3yH6oSaS', 'Lan', 'Nguyen', 2, 'active', NOW()),
+('recruiter@vng.com', '$2b$10$9Okz9yx8u8W9IVbUWTceTejERisork6lysOS46zPeoFXl3yH6oSaS', 'Hung', 'Pham', 2, 'active', NOW()),
+('candidate1@gmail.com', '$2b$10$9Okz9yx8u8W9IVbUWTceTejERisork6lysOS46zPeoFXl3yH6oSaS', 'Huy', 'Tran', 3, 'active', NOW()),
+('candidate2@gmail.com', '$2b$10$9Okz9yx8u8W9IVbUWTceTejERisork6lysOS46zPeoFXl3yH6oSaS', 'Hoa', 'Pham', 3, 'active', NOW()),
+('candidate3@gmail.com', '$2b$10$9Okz9yx8u8W9IVbUWTceTejERisork6lysOS46zPeoFXl3yH6oSaS', 'Khanh', 'Le', 3, 'active', NOW()),
+('candidate4@gmail.com', '$2b$10$9Okz9yx8u8W9IVbUWTceTejERisork6lysOS46zPeoFXl3yH6oSaS', 'Tuan', 'Do', 3, 'active', NOW());
 
 -- 5️⃣ Companies
 INSERT INTO companies (name, logo_url, description, website, created_at) VALUES
@@ -67,7 +67,7 @@ VALUES
 (3, 'cv_khanhle.pdf', 'pending', NOW()),
 (4, 'cv_tuando.pdf', 'approved', NOW());
 
--- 11️⃣ Applications
+-- 11️⃣ Applications (✅ status theo ENUM mới)
 INSERT INTO applications (candidate_id, job_posting_id, cv_id, cover_letter, status, applied_at)
 VALUES
 (1, 1, 1, 'Excited to join your Java team.', 'shortlisted', NOW()),
@@ -76,7 +76,7 @@ VALUES
 (4, 1, 4, 'Looking for a backend internship.', 'reviewed', NOW()),
 (1, 2, 1, 'Would like to switch to frontend.', 'submitted', NOW());
 
--- 12️⃣ Interviews (💥 nhiều dữ liệu để test CRUD)
+-- 12️⃣ Interviews (✅ status theo ENUM mới)
 INSERT INTO interviews (application_id, interviewer_id, scheduled_date, interview_type, status, feedback, rating, created_at)
 VALUES
 (1, 2, '2025-11-10 10:00:00', 'in-person', 'completed', 'Good communication, solid technical base.', 8, NOW()),
@@ -84,8 +84,8 @@ VALUES
 (2, 3, '2025-11-05 09:00:00', 'phone', 'completed', 'Strong frontend fundamentals.', 9, NOW()),
 (3, 3, '2025-11-07 15:30:00', 'video', 'scheduled', NULL, NULL, NOW()),
 (4, 2, '2025-11-08 10:00:00', 'in-person', 'completed', 'Good intern potential.', 7, NOW()),
-(4, 2, '2025-11-09 14:30:00', 'video', 'scheduled', NULL, NULL, NOW()),
-(5, 3, '2025-11-11 11:00:00', 'phone', 'pending', NULL, NULL, NOW());
+(4, 2, '2025-11-09 14:30:00', 'video', 'cancelled', 'Rescheduled due to candidate request.', NULL, NOW()),
+(5, 3, '2025-11-11 11:00:00', 'phone', 'scheduled', NULL, NULL, NOW());
 
 -- 13️⃣ Skills
 INSERT INTO skills (name, created_at) VALUES

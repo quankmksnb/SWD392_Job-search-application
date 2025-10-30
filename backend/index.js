@@ -10,6 +10,7 @@ import permissionRoutes from "./src/routes/permissionRoutes.js";
 import jobRouter from "./src/routes/jobRoutes.js";
 import interviewRoutes from "./src/routes/interviewRoutes.js";
 import recruiterRoutes from "./src/routes/recruiterRoutes.js";
+import applicationRoutes from "./src/routes/applicationRoutes.js";
 
 dotenv.config();
 
@@ -29,6 +30,8 @@ app.use("/api/permissions", permissionRoutes);
 app.use("/job", jobRouter);
 app.use("/api/interviews", interviewRoutes);
 app.use("/api/recruiter", recruiterRoutes);
+app.use("/api/applications", applicationRoutes);
+
 
 // test
 app.get("/test-users", async (req, res) => {
