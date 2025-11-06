@@ -1,5 +1,5 @@
 // index.js
-import express from "express";
+import express, { application } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import pool from "./config/db.js";
@@ -8,14 +8,24 @@ import userRoutes from "./src/routes/userRoutes.js";
 import roleRoutes from "./src/routes/roleRoutes.js";
 import permissionRoutes from "./src/routes/permissionRoutes.js";
 import jobRouter from "./src/routes/jobRoutes.js";
+import applicationRoutes from "./src/routes/applicationRoutes.js";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 9999;
 
+console.log(">>> Server started!");
+
 // Middleware
-app.use(cors());
+
+app.use(cors({
+  origin: "http://localhost:3000",  // frontend
+  methods: ["GET","POST","PUT","DELETE","OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"], // cho phép gửi header Authorization
+  credentials: true, // nếu cần cookie/session
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -25,6 +35,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/permissions", permissionRoutes);
 app.use("/job", jobRouter);
+app.use("/api/applications", applicationRoutes);
 
 // test
 app.get("/test-users", async (req, res) => {
