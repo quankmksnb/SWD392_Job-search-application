@@ -31,7 +31,15 @@ INSERT INTO company_recruiters (id, company_id, recruiter_id, created_at) VALUES
 -- 5️⃣ Categories
 INSERT INTO categories (id, name, slug, created_at) VALUES
 (1, 'Software Engineering', 'software-engineering', CURRENT_TIMESTAMP),
-(2, 'Design', 'design', CURRENT_TIMESTAMP);
+(2, 'Design', 'design', CURRENT_TIMESTAMP),
+(3, 'Data Science', 'data-science', CURRENT_TIMESTAMP),
+(4, 'Finance', 'finance', CURRENT_TIMESTAMP),
+(5, 'Marketing', 'marketing', CURRENT_TIMESTAMP),
+(6, 'Human Resources', 'human-resources', CURRENT_TIMESTAMP),
+(7, 'Mobile Development', 'mobile-development', CURRENT_TIMESTAMP),
+(8, 'Cybersecurity', 'cybersecurity', CURRENT_TIMESTAMP),
+(9, 'Cloud Engineering', 'cloud-engineering', CURRENT_TIMESTAMP),
+(10, 'QA / Testing', 'qa-testing', CURRENT_TIMESTAMP);
 
 -- 6️⃣ Job Postings
 -- 6️⃣ Job Postings (đã thêm required_skills)
@@ -49,7 +57,16 @@ INSERT INTO job_postings (
  'Design user interfaces for mobile apps', 
  'Experience with Figma and Adobe XD', 
  800, 1500, 'HCMC', 'full-time', 'entry', 1, 'published', '2025-12-31', 
- 'Figma, Adobe XD, UI Design', CURRENT_TIMESTAMP);
+ 'Figma, Adobe XD, UI Design', CURRENT_TIMESTAMP),
+
+(3, 3, 3, 'Data Engineer', 'Design data pipelines and ETL jobs.', 'Experience with Python, SQL, Airflow', 1200, 2500, 'Hanoi', 'full-time', 'mid', 2, 'published', '2025-12-31', 'Python, SQL, Airflow', CURRENT_TIMESTAMP),
+(4, 4, 7, 'Mobile App Developer (React Native)', 'Develop cross-platform apps.', 'Experience with React Native and REST APIs', 1000, 2200, 'HCMC', 'full-time', 'mid', 3, 'published', '2025-12-31', 'React Native, REST API, JavaScript', CURRENT_TIMESTAMP),
+(5, 5, 9, 'Cloud Engineer', 'Deploy and monitor AWS infrastructure.', 'Experience with AWS, Terraform', 1500, 3000, 'Hanoi', 'full-time', 'senior', 1, 'published', '2025-12-31', 'AWS, Terraform, CI/CD', CURRENT_TIMESTAMP),
+(6, 6, 4, 'Financial Analyst', 'Analyze financial reports and projections.', 'Knowledge in Excel, Power BI', 800, 1600, 'HCMC', 'full-time', 'entry', 2, 'published', '2025-12-31', 'Excel, Power BI, Accounting', CURRENT_TIMESTAMP),
+(7, 7, 5, 'Marketing Executive', 'Plan and run digital marketing campaigns.', 'Experience with Google Ads, SEO', 700, 1500, 'HCMC', 'full-time', 'entry', 1, 'published', '2025-12-31', 'SEO, Google Ads, Copywriting', CURRENT_TIMESTAMP),
+(8, 8, 8, 'Security Engineer', 'Implement and monitor security systems.', 'Experience with OWASP, penetration testing', 1300, 2700, 'Hanoi', 'full-time', 'mid', 1, 'published', '2025-12-31', 'OWASP, Network Security, Linux', CURRENT_TIMESTAMP),
+(9, 9, 6, 'HR Generalist', 'Manage recruitment and HR operations.', 'Good communication and HRIS experience', 900, 1700, 'Hanoi', 'full-time', 'mid', 1, 'published', '2025-12-31', 'Recruitment, HRIS, Communication', CURRENT_TIMESTAMP),
+(10, 10, 10, 'QA Engineer', 'Design test cases and ensure product quality.', 'Experience with manual and automated testing', 900, 1800, 'HCMC', 'full-time', 'mid', 2, 'published', '2025-12-31', 'Selenium, Postman, TestNG', CURRENT_TIMESTAMP);
 
 
 -- 7️⃣ Candidate Profiles
