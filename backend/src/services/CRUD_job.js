@@ -2,7 +2,7 @@ import readline from 'readline';
 import pool from '../../config/db.js';
 
 const getAllJob = async () => {
-    const [results] = await pool.execute(`SELECT job.*, cate.name as category_name, com.name as company_name FROM job_postings job  
+    const [results] = await pool.execute(`SELECT job.*, cate.name as category_name, com.name as company_name, com.logo_url as company_logo FROM job_postings job  
                                 JOIN categories cate ON job.category_id = cate.id JOIN companies com ON job.company_id = com.id`);
     return results;
 }

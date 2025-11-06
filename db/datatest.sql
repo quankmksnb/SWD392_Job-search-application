@@ -14,7 +14,15 @@ INSERT INTO users (id, email, password_hash, first_name, last_name, role_id, sta
 -- 3️⃣ Companies
 INSERT INTO companies (id, name, logo_url, description, website, created_at) VALUES
 (1, 'FPT Software', 'logo_fpt.png', 'Leading software company in Vietnam', 'https://fptsoftware.com', CURRENT_TIMESTAMP),
-(2, 'VNG Corporation', 'logo_vng.png', 'Technology and game development company', 'https://vng.com.vn', CURRENT_TIMESTAMP);
+(2, 'VNG Corporation', 'logo_vng.png', 'Technology and game development company', 'https://vng.com.vn', CURRENT_TIMESTAMP),
+(3, 'Viettel Digital', 'logo_viettel.png', 'Telecom & digital transformation leader', 'https://viettel.vn', CURRENT_TIMESTAMP),
+(4, 'Shopee Vietnam', 'logo_shopee.png', 'E-commerce platform for Southeast Asia', 'https://shopee.vn', CURRENT_TIMESTAMP),
+(5, 'Tiki Corporation', 'logo_tiki.png', 'Leading e-commerce company in Vietnam', 'https://tiki.vn', CURRENT_TIMESTAMP),
+(6, 'VNPay', 'logo_vnpay.png', 'Fintech payment solutions', 'https://vnpay.vn', CURRENT_TIMESTAMP),
+(7, 'Grab Vietnam', 'logo_grab.png', 'Ride-hailing and delivery service', 'https://grab.com/vn', CURRENT_TIMESTAMP),
+(8, 'MoMo', 'logo_momo.png', 'Vietnam’s leading e-wallet app', 'https://momo.vn', CURRENT_TIMESTAMP),
+(9, 'Techcombank', 'logo_tcb.png', 'Top private bank with modern tech infrastructure', 'https://techcombank.com.vn', CURRENT_TIMESTAMP),
+(10, 'ZaloPay', 'logo_zalopay.png', 'Fintech and mobile payment company', 'https://zalopay.vn', CURRENT_TIMESTAMP);
 
 -- 4️⃣ Company Recruiters
 INSERT INTO company_recruiters (id, company_id, recruiter_id, created_at) VALUES
