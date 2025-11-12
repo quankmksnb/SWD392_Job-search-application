@@ -12,14 +12,18 @@ import {
   SettingOutlined,
   CrownOutlined,
 } from "@ant-design/icons";
-import { logout } from "@/services/AuthService";
+// import { logout } from "@/services/AuthService";
 
+// import { logout } from "./src/services/AuthService.js";
+import { logout } from "@/services/AuthService";
 export default function Header() {
   const [user, setUser] = useState(null);
   const pathname = usePathname();
 
   // 🔥 Kiểm tra xem có phải trang admin không
   const isAdminPage = pathname?.startsWith("/admin");
+  const isHR = user?.role_id === 2
+
 
   useEffect(() => {
     const checkAuth = () => {
@@ -46,7 +50,7 @@ export default function Header() {
   const handleLogout = async () => {
     try {
       // Call API logout
-      await logout();
+      logout();
 
       // Xóa thông tin khỏi localStorage
       localStorage.removeItem("token");
@@ -71,23 +75,23 @@ export default function Header() {
       },
       ...(user?.role_id === 1
         ? [
-            {
-              key: "divider-1",
-              type: "divider",
-            },
-            {
-              key: "admin-user",
-              icon: <CrownOutlined />,
-              label: <Link href="/admin/user-manager">Quản lý người dùng</Link>,
-              style: { color: "#1890ff" },
-            },
-            {
-              key: "admin-role",
-              icon: <CrownOutlined />,
-              label: <Link href="/admin/role-manager">Quản lý phân quyền</Link>,
-              style: { color: "#1890ff" },
-            },
-          ]
+          {
+            key: "divider-1",
+            type: "divider",
+          },
+          {
+            key: "admin-user",
+            icon: <CrownOutlined />,
+            label: <Link href="/admin/user-manager">Quản lý người dùng</Link>,
+            style: { color: "#1890ff" },
+          },
+          {
+            key: "admin-role",
+            icon: <CrownOutlined />,
+            label: <Link href="/admin/role-manager">Quản lý phân quyền</Link>,
+            style: { color: "#1890ff" },
+          },
+        ]
         : []),
       {
         type: "divider",
@@ -161,11 +165,14 @@ export default function Header() {
                 Khu vực
               </Link>
             </li>
-            <li key="post">
-              <Link className="nav-link" href={"/"}>
-                Đăng tuyển
-              </Link>
-            </li>
+            {isHR && (
+              <li key="post">
+                <Link className="nav-link" href={"/job/job-list"}>
+                  Đăng tuyển
+                </Link>
+              </li>
+            )}
+
             <li key="saved">
               <Link className="nav-link flex items-center gap-[4px]" href={"/"}>
                 Việc đã lưu

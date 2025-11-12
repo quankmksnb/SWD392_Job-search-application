@@ -116,9 +116,8 @@ export default function UserManagementPage() {
     // Filter by search text
     if (searchText) {
       filtered = filtered.filter((user) => {
-        const fullName = `${user.first_name || ""} ${
-          user.last_name || ""
-        }`.toLowerCase();
+        const fullName = `${user.first_name || ""} ${user.last_name || ""
+          }`.toLowerCase();
         const email = (user.email || "").toLowerCase();
         const search = searchText.toLowerCase();
         return fullName.includes(search) || email.includes(search);
@@ -573,7 +572,7 @@ export default function UserManagementPage() {
         {selectedUser && (
           <div className="py-4">
             <Divider className="mt-0" />
-            
+
             {/* Header */}
             <Card size="small" className="bg-gradient-to-r from-blue-50 to-indigo-50 mb-4">
               <div className="flex items-center gap-4">
@@ -589,9 +588,8 @@ export default function UserManagementPage() {
                 </Avatar>
                 <div className="flex-1">
                   <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                    {`${selectedUser.first_name || ""} ${
-                      selectedUser.last_name || ""
-                    }`.trim() || "Chưa có tên"}
+                    {`${selectedUser.first_name || ""} ${selectedUser.last_name || ""
+                      }`.trim() || "Chưa có tên"}
                   </h2>
                   <Space size={8}>
                     <Tag
@@ -599,8 +597,8 @@ export default function UserManagementPage() {
                         selectedUser.role_id === 1
                           ? "blue"
                           : selectedUser.role_id === 2
-                          ? "purple"
-                          : "green"
+                            ? "purple"
+                            : "green"
                       }
                       icon={
                         selectedUser.role_id === 1 ? (
@@ -698,8 +696,8 @@ export default function UserManagementPage() {
                     selectedUser.role_id === 1
                       ? "blue"
                       : selectedUser.role_id === 2
-                      ? "purple"
-                      : "green"
+                        ? "purple"
+                        : "green"
                   }
                   className="text-sm py-1 px-3"
                 >
@@ -821,8 +819,8 @@ export default function UserManagementPage() {
               { type: "email", message: "Email không hợp lệ" }
             ]}
           >
-            <Input 
-              placeholder="example@gmail.com" 
+            <Input
+              placeholder="example@gmail.com"
               size="large"
               prefix={<MailOutlined className="text-gray-400" />}
             />
@@ -834,22 +832,22 @@ export default function UserManagementPage() {
               name="password"
               rules={[{ required: true, message: "Vui lòng nhập mật khẩu" }]}
             >
-              <Input.Password 
-                placeholder="••••••" 
+              <Input.Password
+                placeholder="••••••"
                 size="large"
               />
             </Form.Item>
           )}
 
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item 
+            <Form.Item
               label={<span className="font-semibold"><UserOutlined /> Họ</span>}
               name="last_name"
             >
               <Input placeholder="Nguyễn" size="large" />
             </Form.Item>
 
-            <Form.Item 
+            <Form.Item
               label={<span className="font-semibold"><UserOutlined /> Tên</span>}
               name="first_name"
             >
@@ -875,7 +873,7 @@ export default function UserManagementPage() {
             </Select>
           </Form.Item>
 
-          <Form.Item 
+          <Form.Item
             label={<span className="font-semibold"><CheckCircleOutlined /> Trạng thái</span>}
             name="status"
           >

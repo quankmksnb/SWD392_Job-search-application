@@ -1,6 +1,5 @@
 "use client"
 import { useRouter } from "next/navigation"
-import SelectCustom from './../../../../components/ui/Select/SelectCustom';
 import InputCustom from './../../../../components/ui/InputCustom/InputCustom';
 import { useState, useEffect } from 'react'
 import axios from 'axios';
@@ -8,7 +7,7 @@ import axios from 'axios';
 const NewJob = () => {
     const data = {
         company_id: "", category_id: "", title: "", description: "", requirements: "", salary_min: "", salary_max: "", location: "",
-        job_type: "Full-time", experience_level: "Mid-level", number_of_positions: 1, status: "active", deadline: "2024-12-31", required_skills: ""
+        job_type: "", experience_level: "Mid-level", number_of_positions: 1, status: "published", deadline: "2024-12-31", required_skills: ""
     }
     const router = useRouter()
     const [dataJob, setDataJob] = useState(data)
@@ -16,31 +15,65 @@ const NewJob = () => {
     const [cateName, setCateName] = useState([])
     const [compName, setCompName] = useState([])
     const [selectSkill, setSelectSkill] = useState([])
-    const [selectStatus, setSelectStatus] = useState('active')
-
+    const [selectStatus, setSelectStatus] = useState('published')
     useEffect(() => {
         const fetchJob = async () => {
-            await axios.get('http://localhost:9999/job/job-list')
-                .then(res => setJobPosts(res.data.data))
-                .catch(err => console.error(err))
-        }
-        const fechCategoryName = async () => {
-            await axios.get('http://localhost:9999/job/category-name')
-                .then(res => setCateName(res.data.data))
-                .catch(err => console.error(err))
-        }
-        const fechCompanyName = async () => {
-            await axios.get('http://localhost:9999/job/company-name')
-                .then(res => setCompName(res.data.data))
-                .catch(err => console.error(err))
-        }
-        fetchJob();
-        fechCategoryName();
-        fechCompanyName()
-    }, [])
+            try {
+                const getUserFromStorage = () => {
+                    try {
+                        const stored = localStorage.getItem("user");
+                        if (stored) {
+                            const userData = JSON.parse(stored);
+                            return userData.user || userData;
+                        }
+                        return null;
+                    } catch (err) {
+                        console.error("Error parsing user:", err);
+                        return null;
+                    }
+                };
 
-    const skillList = [...new Set(jobPosts.map(job => job.required_skills)
-        .flatMap(item => item.split(', ').map(skill => skill.trim())))];
+                const user = getUserFromStorage();
+                if (!user || !user.id) {
+                    return;
+                }
+                const [categoriesRes, companiesRes, jobListRes] = await Promise.all([
+                    axios.get('http://localhost:9999/job/category-name'),
+                    axios.get('http://localhost:9999/job/company-name', {
+                        params: { userId: user.id }
+                    }),
+                    axios.get(`http://localhost:9999/job/job-list`)
+                ]);
+
+                if (categoriesRes.data.success) {
+                    setCateName(categoriesRes.data.data);
+                } else {
+                    console.error("Failed to fetch categories:", categoriesRes.data.message);
+                }
+
+                if (companiesRes.data.success) {
+                    setCompName(companiesRes.data.data);
+                } else {
+                    console.error("Failed to fetch companies:", companiesRes.data.message);
+                }
+                if (jobListRes.data.success) {
+                    setJobPosts(jobListRes.data.data);
+                } else {
+                    console.error("Failed to fetch job list:", jobListRes.data.message);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        fetchJob();
+    }, []);
+
+    const uniCategory = [...new Map(cateName.map(category => [category.id, category])).values()];
+    const uniCompany = [...new Map(compName.map(company => [company.id, company])).values()];
+    const skillList = [...new Set((jobPosts || [])
+        .map(job => job.required_skills || '')
+        .flatMap(item => item.split(',').map(skill => skill.trim()))
+        .filter(skill => skill !== ''))];
 
     const experienceLevel = [...new Set(jobPosts.map(job => job.experience_level))]
 
@@ -60,34 +93,74 @@ const NewJob = () => {
         setSelectSkill(selectedOptions);
         setDataJob(prev => ({ ...prev, required_skills: selectedOptions.join(', ') }))
     };
+    // Format salary input: hiển thị có dấu phẩy ngăn cách hàng nghìn
+    const handleSalaryChange = (e) => {
+        const { name, value } = e.target;
+        const raw = value.replace(/,/g, ''); // loại bỏ dấu phẩy cũ
+
+        // Chỉ cho nhập số
+        if (!/^\d*$/.test(raw)) return;
+
+        // Format hiển thị (ví dụ: 12000 -> 12,000)
+        const formatted = raw ? Number(raw).toLocaleString('en-US') : '';
+
+        setDataJob((prev) => ({ ...prev, [name]: formatted }));
+    };
+
 
     const handleSubmit = async () => {
+        const currentUser = JSON.parse(localStorage.getItem("user"))
+        const userData = currentUser.user || currentUser
         const { title, description, requirements, required_skills, location, company_id, category_id } = dataJob;
 
         if (!title || !description || !requirements || !required_skills || !location || !company_id || !category_id) {
             alert('Please enter complete information');
             return;
         }
+
+        if (dataJob.salary_min && dataJob.salary_min <= 0) {
+            alert('Salary min must be greater than 0');
+            return;
+        }
+
+        if (dataJob.salary_max && dataJob.salary_max <= 0) {
+            alert('Salary max must be greater than 0');
+            return;
+        }
+
+        if (dataJob.salary_min && dataJob.salary_max && dataJob.salary_min >= dataJob.salary_max) {
+            alert('Salary max must be greater than salary min');
+            return;
+        }
+
         try {
-            const response = await axios.post('http://localhost:9999/job/create-job', {
-                ...dataJob,
-                salary_min: Number(dataJob.salary_min),
-                salary_max: Number(dataJob.salary_max),
-                number_of_positions: Number(dataJob.number_of_positions),
-                status: selectStatus
-            });
+            const response = await axios.post('http://localhost:9999/job/create-job',
+                {
+                    ...dataJob,
+                    salary_min: Number(dataJob.salary_min),
+                    salary_max: Number(dataJob.salary_max),
+                    number_of_positions: Number(dataJob.number_of_positions),
+                    status: selectStatus,
+                    created_by: userData.id
+                }
+            );
+
             if (response.data.success) {
                 alert('Job created successfully!');
                 router.push("/job/job-list");
+            } else {
+                alert('Error: ' + response.data.message);
             }
         } catch (error) {
+            console.error(error);
             alert('Error: ' + (error.response?.data?.message || error.message));
         }
-    }
+    };
+
     return (
         <div className="p-10 bg-[#CDE5F1]">
             <div className="flex justify-between mb-6 p-4 bg-[white] rounded-lg shadow-lg">
-                <h2 className="text-2xl font-bold mb-6">CREATE NEW RECRUITMENT POST</h2>
+                <h2 className="text-2xl font-bold">CREATE NEW RECRUITMENT POST</h2>
                 <button className="gap-2 py-2 px-4 bg-gray-100 rounded-lg border border-gray-300"
                     onClick={() => router.push("/job/job-list")}>Back
                 </button>
@@ -111,56 +184,47 @@ const NewJob = () => {
                                     <label className="block m-2">
                                         Company<strong className="text-red-500"> *</strong>
                                     </label>
-                                    <SelectCustom label="-- Select Company --"
-                                        value={dataJob.company_id} style={{ width: "100%" }}
-                                        onChange={(value) => handleChange({ target: { name: 'company_id', value } })}  >
-                                        {compName.map(c => (
-                                            <SelectCustom.Option key={c.id} value={c.id}>
-                                                {c.name}
-                                            </SelectCustom.Option>
-                                        ))}
-                                    </SelectCustom>
+                                    <select className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                                        value={dataJob.company_id}
+                                        onChange={(e) => handleChange({ target: { name: 'company_id', value: e.target.value } })} >
+                                        <option value="" disabled>-- Select Company --</option>
+                                        {uniCompany.map((c, index) => (
+                                            <option key={index} value={c.id} >{c.name}</option>))}
+                                    </select>
                                 </div>
                                 <div>
                                     <label className="block m-2">
                                         Category<strong className="text-red-500"> *</strong>
                                     </label>
-                                    <SelectCustom label="-- Select Category --"
-                                        value={dataJob.category_id} style={{ width: "100%" }}
-                                        onChange={(value) => handleChange({ target: { name: 'category_id', value } })} >
-                                        {cateName.map(c => (
-                                            <SelectCustom.Option key={c.id} value={c.id}>
-                                                {c.name}
-                                            </SelectCustom.Option>
-                                        ))}
-                                    </SelectCustom>
+                                    <select className="w-full px-4 py-2 border border-gray-300 rounded-lg" value={dataJob.category_id}
+                                        onChange={(e) => handleChange({ target: { name: 'category_id', value: e.target.value } })}>
+                                        <option value="" disabled>-- Select Category --</option>
+                                        {uniCategory.map(c => (
+                                            <option key={c.id} value={c.id}>{c.name}</option>))}
+                                    </select>
+
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block m-2">Level of experience</label>
-                                    <SelectCustom label="-- Select Level of experience --"
-                                        value={dataJob.experience_level} style={{ width: "100%" }}
-                                        onChange={(value) => handleChange({ target: { name: 'experience_level', value } })}>
+                                    <select className="w-full px-4 py-2 border border-gray-300 rounded-lg" value={dataJob.experience_level}
+                                        onChange={(e) => handleChange({ target: { name: 'experience_level', value: e.target.value } })}>
+                                        <option value="" disabled>-- Select Level of experience --</option>
                                         {experienceLevel.map((ex, index) => (
-                                            <SelectCustom.Option key={index} value={ex}>
-                                                {ex}
-                                            </SelectCustom.Option>
-                                        ))}
-                                    </SelectCustom>
+                                            <option key={index} value={ex}>{ex}</option>))}
+                                    </select>
                                 </div>
 
                                 <div>
                                     <label className="block m-2">Type of Job</label>
-                                    <SelectCustom label="-- Select Type of Job --"
+                                    <select className="w-full px-4 py-2 border border-gray-300 rounded-lg placeholder-gray-400"
                                         value={dataJob.job_type} style={{ width: "100%" }}
-                                        onChange={(value) => handleChange({ target: { name: 'job_type', value } })}  >
+                                        onChange={e => handleChange({ target: { name: 'job_type', value: e.target.value } })}  >
+                                        <option value="" disabled>-- Select Type of Job --</option>
                                         {typeJob.map((type, index) => (
-                                            <SelectCustom.Option key={index} value={type}>
-                                                {type}
-                                            </SelectCustom.Option>
-                                        ))}
-                                    </SelectCustom>
+                                            <option key={index} value={type}>{type}</option>))}
+                                    </select>
                                 </div>
                             </div>
                             <div>
@@ -192,28 +256,55 @@ const NewJob = () => {
                             <select value={selectSkill} multiple name="required_skill" onChange={handleSkillChange}
                                 placeholder="Select Type" required
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg placeholder-gray-400">
-
                                 {skillList.map((skill, index) => (
                                     <option key={index} value={skill}>{skill}</option>))}
                             </select>
                         </div>
                         <div className="mt-2">
-                            <label className="block mb-2">Salary</label>
+                            <label className="block m-2">Salary</label>
                             <div className="flex items-center gap-2">
                                 <div className="flex-1">
-                                    <input type='number' name="salary_min" placeholder="Min"
-                                        value={dataJob.salary_min} onChange={handleChange}
-                                        className="w-full px-4 py-1 border border-gray-300 rounded-lg placeholder-gray-400" />
+                                    <input
+                                        type="number"
+                                        name="salary_min"
+                                        value={dataJob.salary_min}
+                                        className="w-full px-4 py-1 border border-gray-300 rounded-lg"
+                                        placeholder="Min"
+                                        onChange={handleChange}
+                                    />
                                 </div>
                                 <span className="text-gray-500">-</span>
                                 <div className="flex-1">
-                                    <input type='number' name="salary_max" placeholder="Max"
-                                        value={dataJob.salary_max} onChange={handleChange}
-                                        className="w-full px-4 py-1 border border-gray-300 rounded-lg placeholder-gray-400" />
+                                    <input
+                                        type="number"
+                                        name="salary_max"
+                                        value={dataJob.salary_max}
+                                        className="w-full px-4 py-1 border border-gray-300 rounded-lg"
+                                        placeholder="Max"
+                                        onChange={handleChange}
+                                    />
                                 </div>
                                 <span className="text-gray-700 font-medium">VND</span>
                             </div>
+
+                            {/* Dòng hiển thị tự động, tách riêng khỏi form */}
+                            {(dataJob.salary_min || dataJob.salary_max) && (
+                                <div className="mt-1 text-sm text-gray-500">
+                                    {dataJob.salary_min && (
+                                        <span>
+                                            Matching {Number(dataJob.salary_min * 1000).toLocaleString("en-US")} VND
+                                        </span>
+                                    )}
+                                    {dataJob.salary_min && dataJob.salary_max && <span> - </span>}
+                                    {dataJob.salary_max && (
+                                        <span>
+                                            {Number(dataJob.salary_max * 1000).toLocaleString("en-US")} VND
+                                        </span>
+                                    )}
+                                </div>
+                            )}
                         </div>
+
                         <div className="mt-2">
                             <label className="block mb-2">
                                 Location<strong className="text-red-500"> *</strong>
@@ -238,7 +329,7 @@ const NewJob = () => {
                                     <label className="block mb-2">Active</label>
                                 </div>
                                 <div className="flex w-full">
-                                    <input type="radio" name="status" value="public" checked={selectStatus === 'public'}
+                                    <input type="radio" name="status" value="published" checked={selectStatus === 'published'}
                                         onChange={handleStatusChange} className="w-4 h-4 mt-1 mr-4" />
                                     <label className="block mb-2">Published</label>
                                 </div>
